@@ -78,7 +78,7 @@ defmodule Echo.Hardware.Ethernet do
   def init(state) do
     init_dhcp_subsystem
     state = update_and_announce(@initial_state, state)
-		Logger.info "started ipconfig agent #{inspect state}"
+		Logger.info "started ethernet agent in state #{inspect state}"
     :os.cmd '/sbin/ip link set #{state.interface} up'
     {:ok, init_static_or_dynamic_ip(state)}
   end
@@ -278,6 +278,7 @@ defmodule Echo.Hardware.Ethernet do
     if Dict.has_key?(changes, :status) do
       set_led_from_status changes[:status]
     end
+    state
   end
 
   # make the status light reflect, well, status
