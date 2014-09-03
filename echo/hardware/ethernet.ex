@@ -298,8 +298,8 @@ defmodule Echo.Hardware.Ethernet do
   end
 
   defp set_led_pattern(pattern) do
-    Logger.debug "setting network led to #{pattern}"
-    Led.set :power, pattern
+    Logger.debug "setting network led to #{inspect pattern}"
+    #Led.set :power, pattern
   end
   
 end
