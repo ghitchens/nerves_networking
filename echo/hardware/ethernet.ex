@@ -275,6 +275,7 @@ defmodule Echo.Hardware.Ethernet do
 
   # update the state and annouce new status
   defp update_and_announce(state, changes) do
+    Logger.debug "updating state #{inspect state} with #{inspect changes}"
     state = Dict.merge(state, changes)
     Hub.put([:sys, :ip, state.interface], changes)
     if Dict.has_key?(changes, :status) do
@@ -285,6 +286,7 @@ defmodule Echo.Hardware.Ethernet do
 
   # make the status light reflect, well, status
   defp set_led_from_status(status) do
+    Logger.debug "changing led state for status #{status}"
     case status do
       "static" -> true
       "bound" -> true
@@ -296,6 +298,7 @@ defmodule Echo.Hardware.Ethernet do
   end
 
   defp set_led_pattern(pattern) do
+    Logger.debug "setting network led to #{pattern}"
     Led.set :power, pattern
   end
   
