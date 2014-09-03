@@ -191,7 +191,7 @@ defmodule Echo.Hardware.Ethernet do
   a DHCP server, conforming to the 'static_ip' spec.
   """
   def ssdp_not_search_or_notify(packet, _ip \\ nil, _port \\ nil) do
-    Logger.debug "SSDP packet #{inspect packet}"
+    #Logger.debug "SSDP packet #{inspect packet}"
     {[raw_http_line], raw_params} = String.split(packet, ["\r\n", "\n"]) |> Enum.split(1)
     http_line = String.downcase(raw_http_line) |> String.strip
     {[http_verb, full_uri], _rest} = String.split(http_line) |> Enum.split(2)
@@ -199,7 +199,7 @@ defmodule Echo.Hardware.Ethernet do
     valid_root_uri = String.downcase "http://#{:ssdp_root_device.get_ip_port}#{:ssdp_root_device.get_uri}"
     if String.starts_with?(full_uri, valid_root_uri) do
       [_, rel_uri] = String.split full_uri, valid_root_uri
-      Logger.debug "SSDP #{http_line} received"
+      #Logger.debug "SSDP #{http_line} received"
       mapped_params = Enum.map raw_params, fn(x) ->
         case String.split(x, ":") do
           [k, v] -> {String.downcase(k), String.strip(v)}
@@ -210,7 +210,7 @@ defmodule Echo.Hardware.Ethernet do
       Logger.debug "Parsed into params: #{inspect filtered_params}"
       GenServer.cast(:main_ethernet, {:ssdp_http, {eb2a(http_verb), rel_uri, filtered_params}})
     else
-      Logger.debug "SSDP #{http_line} received, but not for me"
+      #Logger.debug "SSDP #{http_line} received, but not for me"
     end
   end
 
