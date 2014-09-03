@@ -284,22 +284,16 @@ defmodule Echo.Hardware.Ethernet do
     state
   end
 
-  # make the status light reflect, well, status
+  # make the status light reflect
   defp set_led_from_status(status) do
-    Logger.debug "changing led state for status #{status}"
-    case status do
+    pattern = case status do
       "static" -> true
       "bound" -> true
       "ip4ll" -> :slowwink
       "request" -> :heartbeat
       _ -> :slowblink
     end 
-    |> set_led_pattern
+    Led.set power: pattern
   end
 
-  defp set_led_pattern(pattern) do
-    Logger.debug "setting network led to #{inspect pattern}"
-    #Led.set :power, pattern
-  end
-  
 end
