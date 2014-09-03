@@ -179,7 +179,7 @@ defmodule Echo.Hardware.Ethernet do
   defp make_raw_dhcp_request(state) do
     Logger.info "making dhcp req from '#{state.hostname}' on #{state.interface}"
     env = os_cmd "udhcpc -n -q -f -s #{@udhcpc_script_path} --interface=#{state.interface} -x hostname:#{state.hostname}"
-    Logger.debug "Made DHCP request, got: #{inspect env}"
+    #Logger.debug "Made DHCP request, got: #{inspect env}"
     [_, [last_response]] = Regex.scan ~r/\[.*\]/sr, env
     Enum.map(Regex.scan(~r/(\w+='.+')\n/r, last_response), &cleanup_kv/1)
     |> Enum.filter(fn({k,_v}) -> Enum.member?(@useful_dhcp_keys, k) end)
@@ -275,7 +275,7 @@ defmodule Echo.Hardware.Ethernet do
 
   # update the state and annouce new status
   defp update_and_announce(state, changes) do
-    Logger.debug "updating state #{inspect state} with #{inspect changes}"
+    # Logger.debug "updating state #{inspect state} with #{inspect changes}"
     state = Dict.merge(state, changes)
     Hub.put([:sys, :ip, state.interface], changes)
     if Dict.has_key?(changes, :status) do
