@@ -93,6 +93,7 @@ defmodule Echo.Hardware.Ethernet do
   # If we already have a static configuration in flash, honor that,
   # otherwise do dhcp with fallback to ip4ll if dhcp fails
   defp init_static_or_dynamic_ip(state) do
+    Logger.debug "reading static configuration"
     case File.read(Firmware.etc_path("static_ip.conf")) do
       {:ok, data} ->
   			configure_with_static_ip(state, :erlang.binary_to_term(data))
@@ -111,6 +112,7 @@ defmodule Echo.Hardware.Ethernet do
 
   # setup the interface to have a dynamic (dhcp or ip4ll) address
   defp configure_with_dynamic_ip(state) do # -> new_state
+    Logger.debug "starting dynamic ip allocation"
     state = update_and_announce state, status: "request"
     params = make_raw_dhcp_request(state)
     case params[:status] do
