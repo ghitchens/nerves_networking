@@ -9,15 +9,15 @@ defmodule Echo.Hardware.Ethernet do
   be used to statically configure a port upon request.
 
   Ethernet is implemented as a GenServer.
-    
+
   # Support for AIPA / ipv4ll addressing
-  
+
   If an IP cannot be obtained, Ethernet automatically configures an address
   on the 169.254.0.0/16 network.  Microsoft calls this AIPA, and the IETF
-  calls it ipv4ll (ipv4 link local) addressing.   
-  
-  Once a node has an ipv4ll address, it broadcasts a DHCP DISCOVER packet on 
-  a regular basis to see if a DHCP server re-appears.  The time of this 
+  calls it ipv4ll (ipv4 link local) addressing.
+
+  Once a node has an ipv4ll address, it broadcasts a DHCP DISCOVER packet on
+  a regular basis to see if a DHCP server re-appears.  The time of this
   rebroadcast is progressive (see ip4ll_dhcp_retry_time).   It also retries if it
   gets an SSDP notification from a client on another network.
 
@@ -35,10 +35,10 @@ defmodule Echo.Hardware.Ethernet do
 
   require Logger
   require Hub
-  
+
   alias Echo.Hardware.Led
   alias Echo.Hardware.Firmware
-  
+
   @default_interface    "eth0"
   @default_hostname     "nemo"
 
@@ -54,7 +54,7 @@ defmodule Echo.Hardware.Ethernet do
   @ip4ll_dhcp_retry_interval 60000       # once a minute
 
   @initial_state %{ interface: "eth0", hostname: "echo", status: "init" }
-  
+
   def start(state \\ %{}) do
     :gen_server.start __MODULE__, state, []
   end
@@ -62,8 +62,8 @@ defmodule Echo.Hardware.Ethernet do
   def start_link(state \\ %{}) do
     :gen_server.start_link __MODULE__, state, []
   end
-  
-  # a few assorted helpers to delegate to native erlang 
+
+  # a few assorted helpers to delegate to native erlang
 
   defp el2b(l), do: :erlang.list_to_binary(l)
   defp eb2l(b), do: :erlang.binary_to_list(b)
@@ -71,7 +71,7 @@ defmodule Echo.Hardware.Ethernet do
   defp os_cmd(cmd) do
     :os.cmd(eb2l(cmd)) |> el2b
   end
- 
+
   @doc """
   Initializes the genserver (setting up the ethernet)
   """
@@ -97,7 +97,7 @@ defmodule Echo.Hardware.Ethernet do
     case File.read(Firmware.etc_path("static_ip.conf")) do
       {:ok, data} ->
   			configure_with_static_ip(state, :erlang.binary_to_term(data))
-      _ -> 
+      _ ->
   			configure_with_dynamic_ip(state)
   	end
   end
@@ -129,23 +129,23 @@ defmodule Echo.Hardware.Ethernet do
     end
     configure_interface(state, params)
   end
-  
+
   # setup an ipv4ll address (autoconfigured address) with timer
   defp configure_ip4ll(state) do
     params = ip4ll_params(state)
     schedule_ip4ll_dhcp_retry
     configure_interface(state, params)
   end
-  
+
   defp ip4ll_params(state) do
     [ interface: state.interface, ip: calculate_ip4ll_ip_from_state(state),
     mask: "16", subnet: "255.255.0.0",  status: "ip4ll"  ]
-  end 
+  end
 
   defp calculate_ip4ll_ip_from_state(state) do
     maddr = File.read! "/sys/class/net/#{state.interface}/address"
     seed = :crypto.hash(:md5, maddr)
-    <<x, y, _rest :: bytes>> = seed    
+    <<x, y, _rest :: bytes>> = seed
     if (x==255 and y==255), do: y = y-1
     if (x==0 and y==0), do: y = y+1
     "169.254.#{x}.#{y}"
@@ -184,7 +184,7 @@ defmodule Echo.Hardware.Ethernet do
     Enum.map(Regex.scan(~r/(\w+='.+')\n/r, last_response), &cleanup_kv/1)
     |> Enum.filter(fn({k,_v}) -> Enum.member?(@useful_dhcp_keys, k) end)
   end
-  
+
   @doc """
   Called by SSDP module when UDP/HTTP verb comes in that is not NOTIFY or MSEARCH
   This feature is used to manage both manual and automatic IP configuration without
@@ -228,7 +228,7 @@ defmodule Echo.Hardware.Ethernet do
 
   # configure automatic static ip
   def handle_cast({:ssdp_http, {:put, @ssdp_ip_auto_uri, params}}, state) do
-    Logger.warning "NOT YET IMPLEMENTED - Asked to configure autohop IP with params #{inspect params}"
+    #Logger.warning "NOT YET IMPLEMENTED - Asked to configure autohop IP with params #{inspect params}"
     {:noreply, state}
   end
 
@@ -244,7 +244,7 @@ defmodule Echo.Hardware.Ethernet do
     {:noreply, configure_with_dynamic_ip(state)}
   end
 
-  # try renewing dhcp lease upon expiration unless we've been configured 
+  # try renewing dhcp lease upon expiration unless we've been configured
   # as a static ip in the meantime
   def handle_info(:dhcp_lease_expired, state) do
     case state.status do
@@ -263,13 +263,13 @@ defmodule Echo.Hardware.Ethernet do
     end
     {:noreply, state}
   end
-  
+
   defp schedule_ip4ll_dhcp_retry do
     :erlang.send_after @ip4ll_dhcp_retry_interval, Kernel.self, :ip4ll_dhcp_retry
   end
 
   def _request(path, changes, _context, _from, _state) do
-    Log.info "Request to update #{path} with changes #{changes} received"
+    Log.info "Request to update #{inspect path} with changes #{inspect changes} received"
   end
   ############################ updating /announcing ############################
 
@@ -292,7 +292,7 @@ defmodule Echo.Hardware.Ethernet do
       "ip4ll" -> :slowwink
       "request" -> :heartbeat
       _ -> :slowblink
-    end 
+    end
     Led.set power: pattern
   end
 
