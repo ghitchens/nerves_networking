@@ -161,6 +161,12 @@ defmodule Echo.Hardware.Ethernet do
         os_cmd "ip route add default via #{params[:router]} dev #{state.interface}"
       end
     end
+    #Create remsh on this ip addr
+    Node.stop
+    node_name = "hello@#{params[:ip]}"
+    Logger.info "starting distributed erlang with node name: #{node_name}"
+    Node.start(:erlang.binary_to_atom(node_name, :utf8))
+    Logger.info "reported cookie is #{Node.get_cookie}"
     update_and_announce(state, params)
   end
 
