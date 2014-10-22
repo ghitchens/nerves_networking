@@ -50,17 +50,19 @@ defmodule Echo.Hardware.Ethernet do
 
   @ssdp_ip_auto_uri     "sys/ip/auto"
   @ssdp_ip_static_uri   "sys/ip/static"
-
+  
   @ip4ll_dhcp_retry_interval 60000       # once a minute
 
   @initial_state %{ interface: "eth0", hostname: "echo", status: "init" }
 
   def start(state \\ %{}) do
-    :gen_server.start __MODULE__, state, []
+    name = DefaultEthernet
+    GenServer.start __MODULE__, state, name: name
   end
 
   def start_link(state \\ %{}) do
-    :gen_server.start_link __MODULE__, state, []
+    name = DefaultEthernet
+    GenServer.start_link __MODULE__, state, name: name
   end
 
   # a few assorted helpers to delegate to native erlang
@@ -197,7 +199,9 @@ defmodule Echo.Hardware.Ethernet do
   a DHCP server, conforming to the 'static_ip' spec.
   """
   def ssdp_not_search_or_notify(packet, _ip \\ nil, _port \\ nil) do
-    #Logger.debug "SSDP packet #{inspect packet}"
+    Logger.debug "SSDP nonsearch packet #{inspect packet}"
+    # was {[raw_http_line], raw_params} = :erlang.list_to_binary(packet) |>
+    #  String.split(["\n", "\r"], trim: true) |> Enum.split(1)
     {[raw_http_line], raw_params} = String.split(packet, ["\r\n", "\n"]) |> Enum.split(1)
     http_line = String.downcase(raw_http_line) |> String.strip
     {[http_verb, full_uri], _rest} = String.split(http_line) |> Enum.split(2)
@@ -214,9 +218,10 @@ defmodule Echo.Hardware.Ethernet do
       end
       filtered_params = Enum.reject mapped_params, &(&1 == nil)
       Logger.debug "Parsed into params: #{inspect filtered_params}"
-      GenServer.cast(:main_ethernet, {:ssdp_http, {eb2a(http_verb), rel_uri, filtered_params}})
+      GenServer.cast(DefaultEthernet, {:ssdp_http, {eb2a(http_verb), rel_uri, filtered_params}})
     else
       #Logger.debug "SSDP #{http_line} received, but not for me"
+      nil
     end
   end
 
