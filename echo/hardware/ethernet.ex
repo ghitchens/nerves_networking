@@ -199,7 +199,7 @@ defmodule Echo.Hardware.Ethernet do
   a DHCP server, conforming to the 'static_ip' spec.
   """
   def ssdp_not_search_or_notify(packet, _ip \\ nil, _port \\ nil) do
-    Logger.debug "SSDP nonsearch packet #{inspect packet}"
+    # Logger.debug "SSDP packet #{inspect packet}"
     # was {[raw_http_line], raw_params} = :erlang.list_to_binary(packet) |>
     #  String.split(["\n", "\r"], trim: true) |> Enum.split(1)
     {[raw_http_line], raw_params} = String.split(packet, ["\r\n", "\n"]) |> Enum.split(1)
@@ -217,7 +217,7 @@ defmodule Echo.Hardware.Ethernet do
         end
       end
       filtered_params = Enum.reject mapped_params, &(&1 == nil)
-      Logger.debug "Parsed into params: #{inspect filtered_params}"
+      #Logger.debug "Parsed into params: #{inspect filtered_params}"
       GenServer.cast(DefaultEthernet, {:ssdp_http, {eb2a(http_verb), rel_uri, filtered_params}})
     else
       #Logger.debug "SSDP #{http_line} received, but not for me"
