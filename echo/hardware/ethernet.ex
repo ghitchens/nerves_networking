@@ -168,14 +168,30 @@ defmodule Echo.Hardware.Ethernet do
         os_cmd "ip route add default via #{params[:router]} dev #{state.interface}"
       end
     end
-    #Create remsh on this ip addr
+    bogus_stuff_to_do_when_ip_changes(params)
+    update_and_announce(state, params)
+  end
+
+  # REVIEW
+  ########################################################################
+  # this is stuff that should get factorered into an event listener or
+  # callback so that ethernet.ex doesn't have dependencies on it
+  
+  defp bogus_stuff_to_do_when_ip_changes(params) do
+    Process.whereis(:ssdp) |> Process.exit(:network_configuration_changed)
+    bogus_remsh_node_restart(params)
+  end
+
+  #Create remsh on this ip addr
+  defp bogus_remsh_node_restart(params) do
     Node.stop
     node_name = "hello@#{params[:ip]}"
     Logger.info "starting distributed erlang with node name: #{node_name}"
     Node.start(:erlang.binary_to_atom(node_name, :utf8))
     Logger.info "reported cookie is #{Node.get_cookie}"
-    update_and_announce(state, params)
   end
+
+  ################################# utility functions ##########################
 
   # given "foobar='yahoo'", returns {:foobar, "yahoo"} to help parse result of
   # udhcpc into something useful for us
