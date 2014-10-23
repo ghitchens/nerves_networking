@@ -178,7 +178,10 @@ defmodule Echo.Hardware.Ethernet do
   # callback so that ethernet.ex doesn't have dependencies on it
   
   defp bogus_stuff_to_do_when_ip_changes(params) do
-    Process.whereis(:ssdp) |> Process.exit(:network_configuration_changed)
+    case Process.whereis(:ssdp) do
+      pid -> Process.exit(pid, :network_configuration_changed)
+      _ -> nil
+    end        
     bogus_remsh_node_restart(params)
   end
 
@@ -247,16 +250,18 @@ defmodule Echo.Hardware.Ethernet do
   end
 
   ############################ http ssdp handlers ###########################
-
   # configure manual static IP
   # REVIEW: currently ignores DNS (resolver) settings, not important right now
   # TODO URGENT: hadndle multiple puts of this
+  
   def handle_cast({:ssdp_http, {:put, @ssdp_ip_static_uri, params}}, state) do
-    Logger.info "Configuring Static IP with params #{inspect params}"
+    Logger.info "request to put static IP with params #{inspect params}"
     ifcfg = [ip: params[:"x-ip"], mask: params[:"x-subnet"], router: params[:"x-router"],
              status: "static", dhcp_retries: 0]
-    state = configure_interface state, ifcfg
-    PersistentStorage.put @static_config_key, ifcfg
+    if ((ifcfg[:ip] != state.ip) or (ifcfg[:mask] != state.mask) or (ifcfg[:router] != state.router)) do
+      state = configure_interface state, ifcfg
+      PersistentStorage.put @static_config_key, ifcfg      
+    end
     {:noreply, state}
   end
 
