@@ -52,7 +52,7 @@ defmodule Echo.Hardware.Ethernet do
   
   @static_config_key    :eth_static_config
   
-  @initial_state %{ interface: "eth0", hostname: "echo", status: "init", dhcp_retries: 0 }
+  @initial_state %{ interface: "eth0", hostname: "nemo", status: "init", dhcp_retries: 0 }
 
   def start(state \\ %{}) do
     name = DefaultEthernet
@@ -190,10 +190,10 @@ defmodule Echo.Hardware.Ethernet do
   #Create remsh on this ip addr
   defp bogus_remsh_node_restart(params) do
     Node.stop
-    node_name = "hello@#{params[:ip]}"
-    Logger.info "starting distributed erlang with node name: #{node_name}"
+    node_name = "echo@#{params[:ip]}"
+    Logger.debug "starting distributed erlang with node name: #{node_name}"
     Node.start(:erlang.binary_to_atom(node_name, :utf8))
-    Logger.info "reported cookie is #{Node.get_cookie}"
+    Logger.debug "reported cookie is #{Node.get_cookie}"
   end
 
   ################################# utility functions ##########################
