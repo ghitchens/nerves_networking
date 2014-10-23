@@ -37,7 +37,6 @@ defmodule Echo.Hardware.Ethernet do
   require Hub
 
   alias Echo.Hardware.Led
-  alias Echo.Hardware.Firmware
 
   @default_interface    "eth0"
   @default_hostname     "nemo"
@@ -51,9 +50,11 @@ defmodule Echo.Hardware.Ethernet do
   @ssdp_ip_auto_uri     "sys/ip/auto"
   @ssdp_ip_static_uri   "sys/ip/static"
   
+  @static_config_key    :eth_static_config
+  
   @ip4ll_dhcp_retry_interval 60000       # once a minute
 
-  @initial_state %{ interface: "eth0", hostname: "echo", status: "init" }
+  @initial_state %{ interface: "eth0", hostname: "echo", status: "init", dhcp_retries: 0 }
 
   def start(state \\ %{}) do
     name = DefaultEthernet
@@ -95,12 +96,14 @@ defmodule Echo.Hardware.Ethernet do
   # If we already have a static configuration in flash, honor that,
   # otherwise do dhcp with fallback to ip4ll if dhcp fails
   defp init_static_or_dynamic_ip(state) do
-    Logger.debug "reading static configuration"
-    case File.read(Firmware.etc_path("static_ip.conf")) do
-      {:ok, data} ->
-  			configure_with_static_ip(state, :erlang.binary_to_term(data))
-      _ ->
-  			configure_with_dynamic_ip(state)
+    Logger.debug "eth: reading static configuration"
+    case PersistentStorage.get(@static_config_key) do
+      nil -> 
+        Logger.info "eth: no static ip configuration found, trying dynamic config"
+        configure_with_dynamic_ip(state)
+      static_config -> 
+        Logger.info "eth: found persistent static config"
+  			configure_with_static_ip(state, static_config)
   	end
   end
 
@@ -118,13 +121,17 @@ defmodule Echo.Hardware.Ethernet do
     state = update_and_announce state, status: "request"
     params = make_raw_dhcp_request(state)
     case params[:status] do
-      "bound" -> configure_dhcp(state, params)
-      "renew" -> configure_dhcp(state, params)
-      _ -> configure_ip4ll(state)
+      "bound" -> 
+        configure_dhcp(state, params)
+      "renew" -> 
+        configure_dhcp(state, params)
+      _ -> 
+        configure_ip4ll(state)
     end
   end
 
   defp configure_dhcp(state, params) do
+    state = %{state | dhcp_retries: 0 }
     if Dict.has_key?(params, :lease) do
       lease = :erlang.binary_to_integer(params[:lease])
       :erlang.send_after lease*1000, Kernel.self, :dhcp_lease_expired
@@ -135,13 +142,13 @@ defmodule Echo.Hardware.Ethernet do
   # setup an ipv4ll address (autoconfigured address) with timer
   defp configure_ip4ll(state) do
     params = ip4ll_params(state)
-    schedule_ip4ll_dhcp_retry
+    schedule_ip4ll_dhcp_retry(state)
     configure_interface(state, params)
   end
 
   defp ip4ll_params(state) do
     [ interface: state.interface, ip: calculate_ip4ll_ip_from_state(state),
-    mask: "16", subnet: "255.255.0.0",  status: "ip4ll"  ]
+    mask: "16", subnet: "255.255.0.0",  status: "ip4ll", dhcp_retries: 0 ]
   end
 
   defp calculate_ip4ll_ip_from_state(state) do
@@ -232,20 +239,23 @@ defmodule Echo.Hardware.Ethernet do
   # TODO URGENT: hadndle multiple puts of this
   def handle_cast({:ssdp_http, {:put, @ssdp_ip_static_uri, params}}, state) do
     Logger.info "Configuring Static IP with params #{inspect params}"
-    ifcfg = [ip: params["x-ip"], mask: params["x-subnet"], router: params["x-router"], status: "static"]
+    ifcfg = [ip: params["x-ip"], mask: params["x-subnet"], router: params["x-router"], 
+             status: "static", dhcp_retries: 0]
     state = configure_interface state, ifcfg
+    PersistentStorage.put @static_config_key, ifcfg
     {:noreply, state}
   end
 
   # configure automatic static ip
   def handle_cast({:ssdp_http, {:put, @ssdp_ip_auto_uri, params}}, state) do
-    #Logger.warning "NOT YET IMPLEMENTED - Asked to configure autohop IP with params #{inspect params}"
+    Logger.debug "NOT YET IMPLEMENTED - Asked to configure autohop IP with params #{inspect params}"
     {:noreply, state}
   end
 
   # deconfigure manual static IP
   def handle_cast({:ssdp_http, {:delete, @ssdp_ip_static_uri, _params}}, state) do
     Logger.info "Deconfiguring Static IP"
+    PersistentStorage.delete @static_config_key
     {:noreply, configure_with_dynamic_ip(state)}
   end
 
@@ -270,17 +280,27 @@ defmodule Echo.Hardware.Ethernet do
     case params[:status] do
       "bound" -> configure_dhcp(state, params)
       "renew" -> configure_dhcp(state, params)
-      _ -> schedule_ip4ll_dhcp_retry
+      _ -> 
+        state = schedule_ip4ll_dhcp_retry(state)
     end
     {:noreply, state}
   end
 
-  defp schedule_ip4ll_dhcp_retry do
-    :erlang.send_after @ip4ll_dhcp_retry_interval, Kernel.self, :ip4ll_dhcp_retry
+  defp schedule_ip4ll_dhcp_retry(state) do
+    interval = dhcp_retry_interval(state.dhcp_retries)
+    retry =  state.dhcp_retries + 1
+    Logger.debug "scheduling dhcp retry ##{retry} for #{interval} ms"
+    :erlang.send_after interval, Kernel.self, :ip4ll_dhcp_retry
+    update_and_announce state, dhcp_retries: retry
   end
 
+  # define dhcp retry inverals as every 10 seconds for the first 18 retries
+  # (3 minutes), and every minute thereafter.
+  defp dhcp_retry_interval(tries) when tries > 18, do: 60000
+  defp dhcp_retry_interval(_tries), do: 10000 
+    
   def _request(path, changes, _context, _from, _state) do
-    Log.info "Request to update #{inspect path} with changes #{inspect changes} received"
+    Logger.info "Request to update #{inspect path} with changes #{inspect changes} received"
   end
   ############################ updating /announcing ############################
 
