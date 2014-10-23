@@ -178,10 +178,12 @@ defmodule Echo.Hardware.Ethernet do
   # callback so that ethernet.ex doesn't have dependencies on it
   
   defp bogus_stuff_to_do_when_ip_changes(params) do
+    Logger.debug "restarting ssdp server"
     case Process.whereis(:ssdp) do
       pid -> Process.exit(pid, :network_configuration_changed)
       _ -> nil
     end        
+    Logger.debug "restarting remsh node"
     bogus_remsh_node_restart(params)
   end
 
