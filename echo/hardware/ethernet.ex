@@ -180,8 +180,8 @@ defmodule Echo.Hardware.Ethernet do
   defp bogus_stuff_to_do_when_ip_changes(params) do
     Logger.debug "restarting ssdp server"
     case Process.whereis(:ssdp) do
+      nil -> nil
       pid -> Process.exit(pid, :network_configuration_changed)
-      _ -> nil
     end        
     Logger.debug "restarting remsh node"
     bogus_remsh_node_restart(params)
