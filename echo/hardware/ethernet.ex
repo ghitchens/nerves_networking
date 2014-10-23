@@ -52,8 +52,6 @@ defmodule Echo.Hardware.Ethernet do
   
   @static_config_key    :eth_static_config
   
-  @ip4ll_dhcp_retry_interval 60000       # once a minute
-
   @initial_state %{ interface: "eth0", hostname: "echo", status: "init", dhcp_retries: 0 }
 
   def start(state \\ %{}) do
@@ -219,7 +217,7 @@ defmodule Echo.Hardware.Ethernet do
       #Logger.debug "SSDP #{http_line} received"
       mapped_params = Enum.map raw_params, fn(x) ->
         case String.split(x, ":") do
-          [k, v] -> {String.downcase(k), String.strip(v)}
+          [k, v] -> {String.to_atom(String.downcase(k)), String.strip(v)}
           _ -> nil
         end
       end
@@ -239,7 +237,7 @@ defmodule Echo.Hardware.Ethernet do
   # TODO URGENT: hadndle multiple puts of this
   def handle_cast({:ssdp_http, {:put, @ssdp_ip_static_uri, params}}, state) do
     Logger.info "Configuring Static IP with params #{inspect params}"
-    ifcfg = [ip: params["x-ip"], mask: params["x-subnet"], router: params["x-router"], 
+    ifcfg = [ip: params[:"x-ip"], mask: params[:"x-subnet"], router: params[:"x-router"],
              status: "static", dhcp_retries: 0]
     state = configure_interface state, ifcfg
     PersistentStorage.put @static_config_key, ifcfg
@@ -289,14 +287,13 @@ defmodule Echo.Hardware.Ethernet do
   defp schedule_ip4ll_dhcp_retry(state) do
     interval = dhcp_retry_interval(state.dhcp_retries)
     retry =  state.dhcp_retries + 1
-    Logger.debug "scheduling dhcp retry ##{retry} for #{interval} ms"
+    #Logger.debug "scheduling dhcp retry ##{retry} for #{interval} ms"
     :erlang.send_after interval, Kernel.self, :ip4ll_dhcp_retry
     update_and_announce state, dhcp_retries: retry
   end
 
-  # define dhcp retry inverals as every 10 seconds for the first 18 retries
-  # (3 minutes), and every minute thereafter.
-  defp dhcp_retry_interval(tries) when tries > 18, do: 60000
+  # retry after 10 seconds for the first 10 retries, then 1 min
+  defp dhcp_retry_interval(tries) when tries >= 10, do: 60000
   defp dhcp_retry_interval(_tries), do: 10000 
     
   def _request(path, changes, _context, _from, _state) do
