@@ -49,10 +49,17 @@ defmodule Echo.Hardware.Ethernet do
 
   @ssdp_ip_auto_uri     "sys/ip/auto"
   @ssdp_ip_static_uri   "sys/ip/static"
-  
+
   @static_config_key    :eth_static_config
-  
-  @initial_state %{ interface: "eth0", hostname: "nemo", status: "init", dhcp_retries: 0 }
+
+  @initial_state %{ interface: "eth0", hostname: "nemo", status: "init",
+                    dhcp_retries: 0, type: "ethernet" }
+
+  @sys_pt [:sys, :ip]
+  @service_pt [:services]
+
+  defp sys_pt(key), do: @sys_pt ++ [key]
+  defp service_pt(key), do: @service_pt ++ [key]
 
   def start(state \\ %{}) do
     name = DefaultEthernet
@@ -79,6 +86,13 @@ defmodule Echo.Hardware.Ethernet do
   def init(state) do
     init_dhcp_subsystem
     state = update_and_announce(@initial_state, state)
+    #Put information in services for client
+    intf = String.to_atom @initial_state.interface
+    Hub.put(service_pt(intf),
+            [settings: Hub.pt_to_url(sys_pt(intf)),
+            location: Hub.pt_to_url(sys_pt(intf)),
+            type: "ethernet",
+            status: "online"])
 		Logger.info "started ethernet agent in state #{inspect state}"
     :os.cmd '/sbin/ip link set #{state.interface} up'
     {:ok, init_static_or_dynamic_ip(state)}
@@ -96,10 +110,10 @@ defmodule Echo.Hardware.Ethernet do
   defp init_static_or_dynamic_ip(state) do
     Logger.debug "eth: reading static configuration"
     case PersistentStorage.get(@static_config_key) do
-      nil -> 
+      nil ->
         Logger.info "eth: no static ip configuration found, trying dynamic config"
         configure_with_dynamic_ip(state)
-      static_config -> 
+      static_config ->
         Logger.info "eth: found persistent static config"
   			configure_with_static_ip(state, static_config)
   	end
@@ -119,11 +133,11 @@ defmodule Echo.Hardware.Ethernet do
     state = update_and_announce state, status: "request"
     params = make_raw_dhcp_request(state)
     case params[:status] do
-      "bound" -> 
+      "bound" ->
         configure_dhcp(state, params)
-      "renew" -> 
+      "renew" ->
         configure_dhcp(state, params)
-      _ -> 
+      _ ->
         configure_ip4ll(state)
     end
   end
@@ -176,13 +190,13 @@ defmodule Echo.Hardware.Ethernet do
   ########################################################################
   # this is stuff that should get factorered into an event listener or
   # callback so that ethernet.ex doesn't have dependencies on it
-  
+
   defp bogus_stuff_to_do_when_ip_changes(params) do
     Logger.debug "restarting ssdp server"
     case Process.whereis(:ssdp) do
       nil -> nil
       pid -> Process.exit(pid, :network_configuration_changed)
-    end        
+    end
     Logger.debug "restarting remsh node"
     bogus_remsh_node_restart(params)
   end
@@ -255,14 +269,14 @@ defmodule Echo.Hardware.Ethernet do
   # configure manual static IP
   # REVIEW: currently ignores DNS (resolver) settings, not important right now
   # TODO URGENT: hadndle multiple puts of this
-  
+
   def handle_cast({:ssdp_http, {:put, @ssdp_ip_static_uri, params}}, state) do
     Logger.info "request to put static IP with params #{inspect params}"
     ifcfg = [ip: params[:"x-ip"], mask: params[:"x-subnet"], router: params[:"x-router"],
              status: "static", dhcp_retries: 0]
     if ((ifcfg[:ip] != state.ip) or (ifcfg[:mask] != state.mask) or (ifcfg[:router] != state.router)) do
       state = configure_interface state, ifcfg
-      PersistentStorage.put @static_config_key, ifcfg      
+      PersistentStorage.put @static_config_key, ifcfg
     end
     {:noreply, state}
   end
@@ -301,7 +315,7 @@ defmodule Echo.Hardware.Ethernet do
     case params[:status] do
       "bound" -> configure_dhcp(state, params)
       "renew" -> configure_dhcp(state, params)
-      _ -> 
+      _ ->
         state = schedule_ip4ll_dhcp_retry(state)
     end
     {:noreply, state}
@@ -317,8 +331,8 @@ defmodule Echo.Hardware.Ethernet do
 
   # retry after 10 seconds for the first 10 retries, then 1 min
   defp dhcp_retry_interval(tries) when tries >= 10, do: 60000
-  defp dhcp_retry_interval(_tries), do: 10000 
-    
+  defp dhcp_retry_interval(_tries), do: 10000
+
   def _request(path, changes, _context, _from, _state) do
     Logger.info "Request to update #{inspect path} with changes #{inspect changes} received"
   end
@@ -328,7 +342,7 @@ defmodule Echo.Hardware.Ethernet do
   defp update_and_announce(state, changes) do
     # Logger.debug "updating state #{inspect state} with #{inspect changes}"
     state = Dict.merge(state, changes)
-    Hub.put([:sys, :ip, state.interface], changes)
+    Hub.put(sys_pt(state.interface), changes)
     if Dict.has_key?(changes, :status) do
       set_led_from_status changes[:status]
     end
