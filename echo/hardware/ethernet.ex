@@ -91,7 +91,7 @@ defmodule Echo.Hardware.Ethernet do
     Hub.put(service_pt(intf),
             [settings: Hub.pt_to_url(sys_pt(intf)),
             location: Hub.pt_to_url(sys_pt(intf)),
-            type: "ethernet",
+            "@type": "ethernet",
             status: "online"])
 		Logger.info "started ethernet agent in state #{inspect state}"
     :os.cmd '/sbin/ip link set #{state.interface} up'
