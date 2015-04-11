@@ -1,4 +1,4 @@
-defmodule Echo.Hardware.Ethernet do
+defmodule Ethernet do
 
   @moduledoc """
 
@@ -16,10 +16,10 @@ defmodule Echo.Hardware.Ethernet do
   on the 169.254.0.0/16 network.  Microsoft calls this AIPA, and the IETF
   calls it ipv4ll (ipv4 link local) addressing.
 
-  Once a node has an ipv4ll address, it broadcasts a DHCP DISCOVER packet on
-  a regular basis to see if a DHCP server re-appears.  The time of this
-  rebroadcast is progressive (see ip4ll_dhcp_retry_time).   It also retries if it
-  gets an SSDP notification from a client on another network.
+  Once a node has an ipv4ll address, it broadcasts a DHCP DISCOVER packet on a
+  regular basis to see if a DHCP server re-appears.  The time of this
+  rebroadcast is progressive (see ip4ll_dhcp_retry_time).   It also retries if
+  it gets an SSDP notification from a client on another network.
 
   # Configuration parameters (sent as Elixir map)
 
@@ -34,32 +34,31 @@ defmodule Echo.Hardware.Ethernet do
   use GenServer
 
   require Logger
-  require Hub
-
-  alias Echo.Hardware.Led
 
   @default_interface    "eth0"
-  @default_hostname     "nemo"
+  @default_hostname     "cell"
 
   @udhcpc_script_path   "/tmp/udhcpc.sh"
-
-  @useful_dhcp_keys     [:status, :interface, :ip, :subnet, :mask, :timezone, :router,
-                         :timesvr, :dns, :hostname, :domain, :ipttl, :broadcast, :ntpsrv,
-                         :opt53, :lease, :dhcptype, :serverid, :message]
 
   @ssdp_ip_auto_uri     "sys/ip/auto"
   @ssdp_ip_static_uri   "sys/ip/static"
 
   @static_config_key    :eth_static_config
 
-  @initial_state %{ interface: "eth0", hostname: "nemo", status: "init",
+  @initial_state %{ interface: "eth0", hostname: "cell", status: "init",
                     dhcp_retries: 0, type: "ethernet" }
 
-  @sys_pt [:sys, :ip]
-  @service_pt [:services]
+  @useful_dhcp_keys  [
+    :status, :interface, :ip, :subnet, :mask, :timezone, :router,
+    :timesvr, :dns, :hostname, :domain, :ipttl, :broadcast, :ntpsrv,
+    :opt53, :lease, :dhcptype, :serverid, :message
+  ]
 
-  defp sys_pt(key), do: @sys_pt ++ [key]
-  defp service_pt(key), do: @service_pt ++ [key]
+  @public_keys [ 
+    :interface, :hostname, :status, :dhcp_retries, :type, :ntpsrv, :ip,
+    :subnet, :mask, :timezone, :router, :timesvr, :dns, :domain, :broadcast,
+    :ipttl, :broadcast, :opt53, :lease, :dhcptype, :serverid, :message
+  ] 
 
   def start(state \\ %{}) do
     name = DefaultEthernet
@@ -87,13 +86,7 @@ defmodule Echo.Hardware.Ethernet do
     init_dhcp_subsystem
     state = update_and_announce(@initial_state, state)
     #Put information in services for client
-    intf = String.to_atom @initial_state.interface
-    Hub.put(service_pt(intf),
-            [settings: Hub.pt_to_url(sys_pt(intf)),
-            location: Hub.pt_to_url(sys_pt(intf)),
-            "@type": "ethernet",
-            status: "online"])
-		Logger.info "started ethernet agent in state #{inspect state}"
+	Logger.info "started ethernet agent in state #{inspect state}"
     :os.cmd '/sbin/ip link set #{state.interface} up'
     {:ok, init_static_or_dynamic_ip(state)}
   end
@@ -182,32 +175,7 @@ defmodule Echo.Hardware.Ethernet do
         os_cmd "ip route add default via #{params[:router]} dev #{state.interface}"
       end
     end
-    bogus_stuff_to_do_when_ip_changes(params)
     update_and_announce(state, params)
-  end
-
-  # REVIEW
-  ########################################################################
-  # this is stuff that should get factorered into an event listener or
-  # callback so that ethernet.ex doesn't have dependencies on it
-
-  defp bogus_stuff_to_do_when_ip_changes(params) do
-    Logger.debug "restarting ssdp server"
-    case Process.whereis(:ssdp) do
-      nil -> nil
-      pid -> Process.exit(pid, :network_configuration_changed)
-    end
-    Logger.debug "restarting remsh node"
-    bogus_remsh_node_restart(params)
-  end
-
-  #Create remsh on this ip addr
-  defp bogus_remsh_node_restart(params) do
-    Node.stop
-    node_name = "echo@#{params[:ip]}"
-    Logger.debug "starting distributed erlang with node name: #{node_name}"
-    Node.start(:erlang.binary_to_atom(node_name, :utf8))
-    Logger.debug "reported cookie is #{Node.get_cookie}"
   end
 
   ################################# utility functions ##########################
@@ -333,32 +301,13 @@ defmodule Echo.Hardware.Ethernet do
   defp dhcp_retry_interval(tries) when tries >= 10, do: 60000
   defp dhcp_retry_interval(_tries), do: 10000
 
-  def _request(path, changes, _context, _from, _state) do
-    Logger.info "Request to update #{inspect path} with changes #{inspect changes} received"
-  end
-  ############################ updating /announcing ############################
-
-  # update the state and annouce new status
+  # update changes and announce
   defp update_and_announce(state, changes) do
-    # Logger.debug "updating state #{inspect state} with #{inspect changes}"
-    state = Dict.merge(state, changes)
-    Hub.put(sys_pt(state.interface), changes)
-    if Dict.has_key?(changes, :status) do
-      set_led_from_status changes[:status]
+    public_changes = Dict.take changes, @public_keys
+    if Enum.any?(public_changes) and state[:on_change] do
+      state.on_change.(public_changes)
     end
-    state
-  end
-
-  # make the status light reflect
-  defp set_led_from_status(status) do
-    pattern = case status do
-      "static" -> true
-      "bound" -> true
-      "ip4ll" -> :slowwink
-      "request" -> :heartbeat
-      _ -> :slowblink
-    end
-    Led.set power: pattern
+    Dict.merge(state, changes)
   end
 
 end
