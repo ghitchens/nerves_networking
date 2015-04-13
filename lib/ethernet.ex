@@ -24,7 +24,7 @@ defmodule Ethernet do
   # Configuration parameters (sent as Elixir map)
 
   ifname    - The ethernet interface (defaults to "eth0")
-  hostname  - hostname to pass during a DHCP request (defaults to none)
+  hostname  - hostname to pass during a DHCP request (defaults to "cell")
 
   ip, subnet, mask, router, dns - for static configuration
 
