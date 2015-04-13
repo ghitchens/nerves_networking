@@ -35,8 +35,9 @@ defmodule Ethernet do
 
   require Logger
 
-  @default_interface    "eth0"
-  @default_hostname     "cell"
+  @ifname    Application.get_env :ethernet, :ifname, "eth0"
+  @hostname     Application.get_env :ethernet, :hostname, "cell"
+  @static_config Application.get_env :ethernet, :static_config, nil
 
   @udhcpc_script_path   "/tmp/udhcpc.sh"
 
@@ -45,7 +46,7 @@ defmodule Ethernet do
 
   @static_config_key    :eth_static_config
 
-  @initial_state %{ interface: "eth0", hostname: "cell", status: "init",
+  @initial_state %{ interface: @ifname, hostname: @hostname, status: "init",
                     dhcp_retries: 0, type: "ethernet" }
 
   @useful_dhcp_keys  [
@@ -54,11 +55,11 @@ defmodule Ethernet do
     :opt53, :lease, :dhcptype, :serverid, :message
   ]
 
-  @public_keys [ 
+  @public_keys [
     :interface, :hostname, :status, :dhcp_retries, :type, :ntpsrv, :ip,
     :subnet, :mask, :timezone, :router, :timesvr, :dns, :domain, :broadcast,
     :ipttl, :broadcast, :opt53, :lease, :dhcptype, :serverid, :message
-  ] 
+  ]
 
   def start(state \\ %{}) do
     name = DefaultEthernet
@@ -74,9 +75,11 @@ defmodule Ethernet do
 
   defp el2b(l), do: :erlang.list_to_binary(l)
   defp eb2l(b), do: :erlang.binary_to_list(b)
-  defp eb2a(b), do: :erlang.binary_to_atom(b, :utf8)
+  defp eb2a(b), do: String.to_atom(b)
   defp os_cmd(cmd) do
-    :os.cmd(eb2l(cmd)) |> el2b
+    ret = :os.cmd(eb2l(cmd)) |> el2b
+    Logger.debug "#{__MODULE__} cmd: #{inspect cmd} returned: #{inspect ret}"
+    ret
   end
 
   @doc """
@@ -87,7 +90,7 @@ defmodule Ethernet do
     state = update_and_announce(@initial_state, state)
     #Put information in services for client
 	Logger.info "started ethernet agent in state #{inspect state}"
-    :os.cmd '/sbin/ip link set #{state.interface} up'
+    os_cmd "/sbin/ip link set #{state.interface} up"
     {:ok, init_static_or_dynamic_ip(state)}
   end
 
@@ -102,14 +105,26 @@ defmodule Ethernet do
   # otherwise do dhcp with fallback to ip4ll if dhcp fails
   defp init_static_or_dynamic_ip(state) do
     Logger.debug "eth: reading static configuration"
-    case PersistentStorage.get(@static_config_key) do
-      nil ->
-        Logger.info "eth: no static ip configuration found, trying dynamic config"
-        configure_with_dynamic_ip(state)
-      static_config ->
-        Logger.info "eth: found persistent static config"
-  			configure_with_static_ip(state, static_config)
-  	end
+    try do
+      case PersistentStorage.get(@static_config_key) do
+        nil ->
+          Logger.info "eth: no static ip configuration found, trying dynamic config"
+          configure_with_dynamic_ip(state)
+        static_config ->
+          Logger.info "eth: found persistent static config"
+    			configure_with_static_ip(state, static_config)
+    	end
+    rescue
+      ArgumentError ->
+        case @static_config do
+          nil ->
+            Logger.info "eth: PersistentStorage not available, trying dynamic config"
+            configure_with_dynamic_ip(state)
+          config ->
+            Logger.info "eth: Static configuration found in config.exs"
+            configure_with_static_ip(state, config)
+        end
+    end
   end
 
   # setup the interface to ahve a static ip address

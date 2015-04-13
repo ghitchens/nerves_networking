@@ -21,10 +21,13 @@ it gets an SSDP notification from a client on another network.
 
 ## Configuration parameters (sent as Elixir map)
 
-    ifname    - The ethernet interface (defaults to "eth0")
-    hostname  - hostname to pass during a DHCP request (defaults to none)
-
-ip, subnet, mask, router, dns - for static configuration
+    ifname        - The ethernet interface (defaults to "eth0")
+    hostname      - Hostname to pass during a DHCP request (defaults to "cell")
+    static_config - Statically set the interface configuration
+        Required params for static_config:
+        ip       - IP address to configure to (e.g. "192.168.15.100")
+        mask     - Subnet Mask to use (e.g. "255.255.255.0")
+        router   - IP address of router (e.g. "192.168.15.1")
 
 ## Callbacks
 
@@ -33,6 +36,26 @@ on_change   fn/1    Called with an ENUM representing the changes that are
                     being made
 
 ```
+
+## Examples
+
+    # Start Ethernet using dhcp and calling back to AIPA/ipv4ll
+
+    #config.exs
+    config :ethernet, ifname: "eth2", hostname: "bbb"
+
+    # starting...
+    iex> Ethernet.start
+
+    # Start Ethernet with static configuration
+
+    #config.exs
+    config :ethernet, ifname: "eth2", hostname: "bbb", static_config: [
+      ip: "192.168.1.100", mask: "255.255.255.0", router: "192.168.1.1"
+    ]
+
+    # starting...
+    iex> Ethernet.start
 
 ## Contributing
 
