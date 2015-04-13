@@ -28,7 +28,6 @@ defmodule Ethernet do
 
   ip, subnet, mask, router, dns - for static configuration
 
-  TODO write genserver request helper
   """
 
   use GenServer
@@ -54,11 +53,11 @@ defmodule Ethernet do
     :opt53, :lease, :dhcptype, :serverid, :message
   ]
 
-  @public_keys [ 
+  @public_keys [
     :interface, :hostname, :status, :dhcp_retries, :type, :ntpsrv, :ip,
     :subnet, :mask, :timezone, :router, :timesvr, :dns, :domain, :broadcast,
     :ipttl, :broadcast, :opt53, :lease, :dhcptype, :serverid, :message
-  ] 
+  ]
 
   def start(state \\ %{}) do
     name = DefaultEthernet
@@ -83,6 +82,8 @@ defmodule Ethernet do
   Initializes the genserver (setting up the ethernet)
   """
   def init(state) do
+    {:ok, ref} = GenEvent.start_link # REVIEW iface as option?
+    state = %{ state | notifier: ref }
     init_dhcp_subsystem
     state = update_and_announce(@initial_state, state)
     #Put information in services for client
