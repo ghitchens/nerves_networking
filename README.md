@@ -14,6 +14,7 @@ Manages ethernet on [Nerves](http://nerves-project.org) based embedded systems, 
 ```elixir
 {:ok, eth0} = Ethernet.start_link interface: "eth0", hostname: "happy"
 ```
+
 Options are specified by a keyword list, as follows:
 
 
@@ -46,3 +47,7 @@ GenEvent.add_handler(eth0, NetworkStateInspectionHandler, [])
 
 ### Areas For Improvement
 - needs a lot better AIPA/IP4LL address negotiation
+
+### Contributing
+
+We appreciate any contribution to Cellulose Projects, so check out our [CONTRIBUTING.md](CONTRIBUTING.md) guide for more information. We usually keep a list of features and bugs [in the issue tracker][https://github.com/cellulose/ethernet/issues].
