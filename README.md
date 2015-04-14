@@ -17,7 +17,6 @@ Manages ethernet on [Nerves](http://nerves-project.org) based embedded systems, 
 
 Options are specified by a keyword list, as follows:
 
-
 keyword   | type       | description
 ----------|:---------- |:-----------
 interface | string     | interface to configure (eg "eth0", "en2", "lo0", etc)
