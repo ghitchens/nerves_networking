@@ -29,6 +29,20 @@ it gets an SSDP notification from a client on another network.
         mask     - Subnet Mask to use (e.g. "255.255.255.0")
         router   - IP address of router (e.g. "192.168.15.1")
 
+## Static IP Configuration Storage
+
+Ethernet is capable of storing static configuration provided a module is
+implemented following the `Ethernet.Storage` Behaviour. It is up to the implementer to determine how this should be accomplished. An example of using
+`cellulose/persistent_storage` is provided in the `/examples` directory.
+
+To utilize your module just specify it in your config:
+
+    config :ethernet, storage: EthernetPersistentStorage
+
+Or when you start Ethernet just pass it with the key `:storage`:
+
+    Ethernet.start storage: EthernetPersistentStorage
+
 ## Callbacks
 
 ```

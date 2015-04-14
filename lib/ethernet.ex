@@ -38,16 +38,15 @@ defmodule Ethernet do
   @ifname    Application.get_env :ethernet, :ifname, "eth0"
   @hostname     Application.get_env :ethernet, :hostname, "cell"
   @static_config Application.get_env :ethernet, :static_config, nil
+  @storage_module Application.get_env :ethernet, :storage, nil
 
   @udhcpc_script_path   "/tmp/udhcpc.sh"
 
   @ssdp_ip_auto_uri     "sys/ip/auto"
   @ssdp_ip_static_uri   "sys/ip/static"
 
-  @static_config_key    :eth_static_config
-
   @initial_state %{ interface: @ifname, hostname: @hostname, status: "init",
-                    dhcp_retries: 0, type: "ethernet" }
+                    dhcp_retries: 0, type: "ethernet", storage: @storage_module}
 
   @useful_dhcp_keys  [
     :status, :interface, :ip, :subnet, :mask, :timezone, :router,
@@ -105,25 +104,28 @@ defmodule Ethernet do
   # otherwise do dhcp with fallback to ip4ll if dhcp fails
   defp init_static_or_dynamic_ip(state) do
     Logger.debug "eth: reading static configuration"
-    try do
-      case PersistentStorage.get(@static_config_key) do
+    case state[:storage] do
+      nil -> configure_dynamic_or_static_ip(state)
+      fun -> case fun.get do
         nil ->
-          Logger.info "eth: no static ip configuration found, trying dynamic config"
-          configure_with_dynamic_ip(state)
-        static_config ->
+          configure_dynamic_or_static_ip(state)
+        config ->
           Logger.info "eth: found persistent static config"
-    			configure_with_static_ip(state, static_config)
-    	end
-    rescue
-      ArgumentError ->
-        case @static_config do
-          nil ->
-            Logger.info "eth: PersistentStorage not available, trying dynamic config"
-            configure_with_dynamic_ip(state)
-          config ->
-            Logger.info "eth: Static configuration found in config.exs"
-            configure_with_static_ip(state, config)
-        end
+    			configure_with_static_ip(state, config)
+      end
+    end
+  end
+
+  # Check if we have a static config defined by the config file. If so then use
+  # it, otherwise fallback to dhcp (and eventually ip4ll)
+  defp configure_dynamic_or_static_ip(state) do
+    case @static_config do
+      nil ->
+        Logger.info "eth: no static ip configuration found, trying dynamic config"
+        configure_with_dynamic_ip(state)
+      config ->
+        Logger.info "eth: Static configuration found in config.exs"
+        configure_with_static_ip(state, config)
     end
   end
 
@@ -259,7 +261,7 @@ defmodule Ethernet do
              status: "static", dhcp_retries: 0]
     if ((ifcfg[:ip] != state.ip) or (ifcfg[:mask] != state.mask) or (ifcfg[:router] != state.router)) do
       state = configure_interface state, ifcfg
-      PersistentStorage.put @static_config_key, ifcfg
+      if state[:storage], do: state.storage.put(ifcfg)
     end
     {:noreply, state}
   end
@@ -273,7 +275,7 @@ defmodule Ethernet do
   # deconfigure manual static IP
   def handle_cast({:ssdp_http, {:delete, @ssdp_ip_static_uri, _params}}, state) do
     Logger.info "Deconfiguring Static IP"
-    PersistentStorage.delete @static_config_key
+    if state[:storage], do: state.storage.delete
     {:noreply, configure_with_dynamic_ip(state)}
   end
 

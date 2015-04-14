@@ -11,8 +11,6 @@ defmodule Ethernet.Mixfile do
 
   def application, do: [applications: [:logger]]
 
-  defp deps, do: [
-    {:persistent_storage, github: "cellulose/persistent_storage"}
-  ]
+  defp deps, do: []
 
 end
