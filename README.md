@@ -18,10 +18,26 @@ Manages ethernet on [Nerves](http://nerves-project.org) based embedded systems, 
 Options are specified by a keyword list, as follows:
 
 
-keyword    | type       | description
----------- |:---------- |:-----------
-interface  | string     | interface to configure (eg "eth0", "en2", "lo0", etc)
-hostname   | string     | hostname to pass to dhcp server during dhcp request
+keyword   | type       | description
+----------|:---------- |:-----------
+interface | string     | interface to configure (eg "eth0", "en2", "lo0", etc)
+hostname  | string     | hostname to pass to dhcp server during dhcp request
+
+Config options may be specified by a keyword list for configuration in a `config.exs` file using the `:static_config` key.  Required keys of list are:
+
+keyword   | type       | description
+----------|:---------- |:-----------
+ip        | string     | IP address to configure to (e.g. "192.168.15.100")
+mask      | string     | Subnet Mask to use (e.g. "255.255.255.0")
+router    | string     | IP address of router (e.g. "192.168.15.1")
+
+```elixir
+config :ethernet, static_config: [
+    ip: "192.168.1.10",
+    mask: "255.255.0.0",
+    router: "192.168.1.1"
+    ]
+```
 
 ### Notifications
 
@@ -45,9 +61,51 @@ And then, you could start the interface and add the handler like this..
 GenEvent.add_handler(eth0, NetworkStateInspectionHandler, [])
 ```
 
+## Static IP Configuration Storage
+
+`Ethernet` is capable of storing static configuration values, provided a
+module is implemented following the `Ethernet.Storage` Behaviour. It is up
+to the implementer to determine how this should be accomplished. An example
+of using `cellulose/persistent_storage` project is provided in the `/examples`
+directory.
+
+To utilize your module just specify it in your config:
+
+```elixir
+config :ethernet, storage: EthernetPersistentStorage
+```
+
+Or when you start Ethernet just pass it with the key `:storage`:
+
+```elixir
+Ethernet.start storage: EthernetPersistentStorage
+```
+
 ### Areas For Improvement
 - needs a lot better AIPA/IP4LL address negotiation
 
-### Contributing
+## Examples
 
-We appreciate any contribution to Cellulose Projects, so check out our [CONTRIBUTING.md](CONTRIBUTING.md) guide for more information. We usually keep a list of features and bugs [in the issue tracker][https://github.com/cellulose/ethernet/issues].
+```elixir
+    # Start Ethernet using dhcp and calling back to AIPA/ipv4ll
+
+    #config.exs
+    config :ethernet, interface: "eth2", hostname: "bbb"
+
+    # starting...
+    iex> Ethernet.start
+
+    # Start Ethernet with static configuration
+
+    #config.exs
+    config :ethernet, interface: "eth2", hostname: "bbb", static_config: [
+      ip: "192.168.1.100", mask: "255.255.255.0", router: "192.168.1.1"
+    ]
+
+    # starting...
+    iex> Ethernet.start
+```
+
+## Contributing
+
+We appreciate any contribution to Cellulose Projects, so check out our [CONTRIBUTING.md](CONTRIBUTING.md) guide for more information. We usually keep a list of features and bugs [in the issue tracker](https://github.com/cellulose/ethernet/issues).

@@ -23,8 +23,8 @@ defmodule Ethernet do
 
   # Configuration parameters (sent as Elixir map)
 
-  ifname    - The ethernet interface (defaults to "eth0")
-  hostname  - hostname to pass during a DHCP request (defaults to none)
+  interface    - The ethernet interface (defaults to "eth0")
+  hostname  - hostname to pass during a DHCP request (defaults to "cell")
 
   ip, subnet, mask, router, dns - for static configuration
 
@@ -34,18 +34,18 @@ defmodule Ethernet do
 
   require Logger
 
-  @default_interface    "eth0"
-  @default_hostname     "cell"
+  @interface    Application.get_env :ethernet, :interface, "eth0"
+  @hostname     Application.get_env :ethernet, :hostname, "cell"
+  @static_config Application.get_env :ethernet, :static_config, nil
+  @storage_module Application.get_env :ethernet, :storage, nil
 
   @udhcpc_script_path   "/tmp/udhcpc.sh"
 
   @ssdp_ip_auto_uri     "sys/ip/auto"
   @ssdp_ip_static_uri   "sys/ip/static"
 
-  @static_config_key    :eth_static_config
-
-  @initial_state %{ interface: "eth0", hostname: "cell", status: "init",
-                    dhcp_retries: 0, type: "ethernet" }
+  @initial_state %{ interface: @interface, hostname: @hostname, status: "init",
+                    dhcp_retries: 0, type: "ethernet", storage: @storage_module}
 
   @useful_dhcp_keys  [
     :status, :interface, :ip, :subnet, :mask, :timezone, :router,
@@ -73,9 +73,11 @@ defmodule Ethernet do
 
   defp el2b(l), do: :erlang.list_to_binary(l)
   defp eb2l(b), do: :erlang.binary_to_list(b)
-  defp eb2a(b), do: :erlang.binary_to_atom(b, :utf8)
+  defp eb2a(b), do: String.to_atom(b)
   defp os_cmd(cmd) do
-    :os.cmd(eb2l(cmd)) |> el2b
+    ret = :os.cmd(eb2l(cmd)) |> el2b
+    Logger.debug "#{__MODULE__} cmd: #{inspect cmd} returned: #{inspect ret}"
+    ret
   end
 
   @doc """
@@ -88,7 +90,7 @@ defmodule Ethernet do
     state = update_and_announce(@initial_state, state)
     #Put information in services for client
 	Logger.info "started ethernet agent in state #{inspect state}"
-    :os.cmd '/sbin/ip link set #{state.interface} up'
+    os_cmd "/sbin/ip link set #{state.interface} up"
     {:ok, init_static_or_dynamic_ip(state)}
   end
 
@@ -103,14 +105,29 @@ defmodule Ethernet do
   # otherwise do dhcp with fallback to ip4ll if dhcp fails
   defp init_static_or_dynamic_ip(state) do
     Logger.debug "eth: reading static configuration"
-    case PersistentStorage.get(@static_config_key) do
+    case state[:storage] do
+      nil -> configure_dynamic_or_static_ip(state)
+      fun -> case fun.get do
+        nil ->
+          configure_dynamic_or_static_ip(state)
+        config ->
+          Logger.info "eth: found persistent static config"
+    			configure_with_static_ip(state, config)
+      end
+    end
+  end
+
+  # Check if we have a static config defined by the config file. If so then use
+  # it, otherwise fallback to dhcp (and eventually ip4ll)
+  defp configure_dynamic_or_static_ip(state) do
+    case @static_config do
       nil ->
         Logger.info "eth: no static ip configuration found, trying dynamic config"
         configure_with_dynamic_ip(state)
-      static_config ->
-        Logger.info "eth: found persistent static config"
-  			configure_with_static_ip(state, static_config)
-  	end
+      config ->
+        Logger.info "eth: Static configuration found in config.exs"
+        configure_with_static_ip(state, config)
+    end
   end
 
   # setup the interface to ahve a static ip address
@@ -245,7 +262,7 @@ defmodule Ethernet do
              status: "static", dhcp_retries: 0]
     if ((ifcfg[:ip] != state.ip) or (ifcfg[:mask] != state.mask) or (ifcfg[:router] != state.router)) do
       state = configure_interface state, ifcfg
-      PersistentStorage.put @static_config_key, ifcfg
+      if state[:storage], do: state.storage.put(ifcfg)
     end
     {:noreply, state}
   end
@@ -259,7 +276,7 @@ defmodule Ethernet do
   # deconfigure manual static IP
   def handle_cast({:ssdp_http, {:delete, @ssdp_ip_static_uri, _params}}, state) do
     Logger.info "Deconfiguring Static IP"
-    PersistentStorage.delete @static_config_key
+    if state[:storage], do: state.storage.delete
     {:noreply, configure_with_dynamic_ip(state)}
   end
 
