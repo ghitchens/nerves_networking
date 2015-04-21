@@ -132,7 +132,7 @@ defmodule Ethernet do
   @doc """
   Initializes the genserver (setting up the ethernet)
   """
-  def init(state) do
+  def init(args) do
     Logger.info "ethernet init with arguments: #{inspect args}" 
     {:ok, ref} = GenEvent.start_link # REVIEW iface as option?
     state = Dict.merge %{ notifier: ref }, args
