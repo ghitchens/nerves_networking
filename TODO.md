@@ -1,0 +1,1 @@
+- cleanup init params to allow mulitple adapters
