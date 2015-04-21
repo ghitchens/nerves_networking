@@ -58,15 +58,18 @@ defmodule Ethernet do
     :subnet, :mask, :timezone, :router, :timesvr, :dns, :domain, :broadcast,
     :ipttl, :broadcast, :opt53, :lease, :dhcptype, :serverid, :message
   ]
+  
+  # TODO: make DefaultEthernet come from args, and handle multiple adapters
+  # properly.
 
-  def start(state \\ %{}) do
+  def start(args \\ []) do
     name = DefaultEthernet
-    GenServer.start __MODULE__, state, name: name
+    GenServer.start __MODULE__, args, name: name
   end
 
-  def start_link(state \\ %{}) do
+  def start_link(args \\ []) do
     name = DefaultEthernet
-    GenServer.start_link __MODULE__, state, name: name
+    GenServer.start_link __MODULE__, args, name: name
   end
 
   # a few assorted helpers to delegate to native erlang
@@ -84,12 +87,13 @@ defmodule Ethernet do
   Initializes the genserver (setting up the ethernet)
   """
   def init(state) do
+    Logger.info "ethernet init with arguments: #{inspect args}" 
     {:ok, ref} = GenEvent.start_link # REVIEW iface as option?
-    state = %{ state | notifier: ref }
+    state = Dict.merge %{ notifier: ref }, args
     init_dhcp_subsystem
     state = update_and_announce(@initial_state, state)
     #Put information in services for client
-	Logger.info "started ethernet agent in state #{inspect state}"
+    Logger.info "started ethernet agent in state #{inspect state}"
     os_cmd "/sbin/ip link set #{state.interface} up"
     {:ok, init_static_or_dynamic_ip(state)}
   end
