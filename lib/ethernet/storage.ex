@@ -1,6 +1,16 @@
 defmodule Ethernet.Storage do
-  use Behaviour
+  @moduledoc """
+  Behaviour describing the necessary methods a module must implement to enable
+  "storage" of static configuration options provided during runtime.
 
+  To utilize a behaviour you must specify it in the applications config file.
+
+  ## Examples
+  ```
+  config :ethernet, storage: YourCustomStorageModule
+  ```
+  """
+  use Behaviour
 
   @type t :: list | map
 
