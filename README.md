@@ -1,7 +1,9 @@
 Ethernet
 ========
 
-Manages ethernet on [Nerves](http://nerves-project.org) based embedded systems, with optional [Celluose](http://cellulose.io) integration.
+# NOT READY YET!
+
+A [Nerves](http://nerves-project.org) module to handle ethernet on embedded systems.
 
 ### Features
 
@@ -12,6 +14,7 @@ Manages ethernet on [Nerves](http://nerves-project.org) based embedded systems, 
 ### Usage
 
 ```elixir
+alias Nerves.IO.Ethernet
 {:ok, eth0} = Ethernet.start_link interface: "eth0", hostname: "happy"
 ```
 
@@ -31,7 +34,7 @@ mask      | string     | Subnet Mask to use (e.g. "255.255.255.0")
 router    | string     | IP address of router (e.g. "192.168.15.1")
 
 ```elixir
-config :ethernet, static_config: [
+config :nerves_io_ethernet, static_config: [
     ip: "192.168.1.10",
     mask: "255.255.0.0",
     router: "192.168.1.1"
@@ -71,7 +74,7 @@ directory.
 To utilize your module just specify it in your config:
 
 ```elixir
-config :ethernet, storage: EthernetPersistentStorage
+config :nerves_io_ethernet, storage: EthernetPersistentStorage
 ```
 
 Or when you start Ethernet just pass it with the key `:storage`:
@@ -84,12 +87,12 @@ Ethernet.start storage: EthernetPersistentStorage
 - needs a lot better AIPA/IP4LL address negotiation
 
 ## Examples
-
+ 
 ```elixir
     # Start Ethernet using dhcp and calling back to AIPA/ipv4ll
 
     #config.exs
-    config :ethernet, interface: "eth2", hostname: "bbb"
+    config :nerves_io_ethernet, interface: "eth2", hostname: "bbb"
 
     # starting...
     iex> Ethernet.start
@@ -97,7 +100,7 @@ Ethernet.start storage: EthernetPersistentStorage
     # Start Ethernet with static configuration
 
     #config.exs
-    config :ethernet, interface: "eth2", hostname: "bbb", static_config: [
+    config :nerves_io_ethernet, interface: "eth2", hostname: "bbb", static_config: [
       ip: "192.168.1.100", mask: "255.255.255.0", router: "192.168.1.1"
     ]
 
@@ -105,6 +108,3 @@ Ethernet.start storage: EthernetPersistentStorage
     iex> Ethernet.start
 ```
 
-## Contributing
-
-We appreciate any contribution to Cellulose Projects, so check out our [CONTRIBUTING.md](CONTRIBUTING.md) guide for more information. We usually keep a list of features and bugs [in the issue tracker](https://github.com/cellulose/ethernet/issues).
