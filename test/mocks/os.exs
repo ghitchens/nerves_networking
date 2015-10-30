@@ -22,4 +22,3 @@ defmodule Mocks.OS do
   end
 
 end
-
