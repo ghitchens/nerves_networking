@@ -1,4 +1,4 @@
-defmodule NervesEthernet.Mixfile do
+defmodule Nerves.IO.Ethernet.Mixfile do
 
   use Mix.Project
 
@@ -7,26 +7,29 @@ defmodule NervesEthernet.Mixfile do
     version: version,
     elixir: "~> 1.0",
     deps: deps,
-    name: "Nerves.Ethernet",
-    description: "Ethernet support (dhcp, static, ipv4ll)",
+    description: "Ethernet support for the Nerves Framework",
+    # Hex
     package: package,
-    docs: [source_ref: "v#{version}", main: "Nerves.Ethernet",
+    # ExDoc
+    name: "Nerves.IO.Ethernet",
+    docs: [source_ref: "v#{version}",
+           main: "Nerves.IO.Ethernet",
            source_url: "https://github.com/nerves-project/nerves_io_ethernet"]
   ]
 
   def application, do: [applications: [:logger]]
 
   defp deps, do: [
-    {:earmark, "~> 0.1", only: :docs},
-    {:ex_doc, "~> 0.8", only: :docs}
+    {:earmark, "~> 0.1", only: [:dev, :docs]},
+    {:ex_doc, "~> 0.8", only: [:dev, :docs]}
   ]
 
   defp package, do: [
     maintainers: ["Garth Hitchens", "Chris Dutton"],
     licenses: ["MIT"],
-    links: %{github: "https://github.com/nerves-project/nerves_ethernet"},
+    links: %{github: "https://github.com/nerves-project/nerves_io_ethernet"},
     files: ~w(lib config) ++
-           ~w(README.md CHANGELOG.md LICENSE mix.exs package.json)
+           ~w(README.md CHANGELOG.md LICENSE mix.exs)
   ]
 
   defp version do
