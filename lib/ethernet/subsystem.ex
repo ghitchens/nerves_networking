@@ -4,9 +4,9 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   Implements an ethernet subsystem based on using the `ip` and `udhcpc` CLI.
   Designed for embedded systems to provide simple ipv4 ethernet access.
 
-  This doesn't rely on using udhcpc as a daemon, but instead simply invokes
+  This doesn't rely on using `udhcpc` as a daemon, but instead simply invokes
   it to perform low level configuration, assuming the
-  Nerves.IO.Ethernet module handles daemon-level functionality like
+  `Nerves.IO.Ethernet` module handles daemon-level functionality like
   DHCP renewal, etc.
 
   Major Limitations:
@@ -70,9 +70,9 @@ defmodule Nerves.IO.Ethernet.Subsystem do
 
   @doc """
   Makes a dhcp request on the specified interface with optional hostname, and
-  returns Dict with standardized keys for the result of the DHCP request.
+  returns `Dict` with standardized keys for the result of the DHCP request.
 
-  Uses `udhcpc` in non-daemon mode to handle dhcp."
+  Uses `udhcpc` in non-daemon mode to handle dhcp.
   """
   @spec dhcp_request(interface, String.t) :: Dict.t
   def dhcp_request(interface, hostname) do
@@ -113,7 +113,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   end
 
   defp ip_cmd(cmd) do
-    "/sbin/ip " <> cmd
+    "/sbin/ip #{cmd}"
     |> os_cmd
     |> ip_response_to_status
   end

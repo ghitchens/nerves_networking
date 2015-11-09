@@ -49,24 +49,27 @@ defmodule Nerves.IO.Ethernet.Server do
   # try renewing dhcp lease upon expiration unless we've been configured
   # as a static ip in the meantime
   def handle_info(:dhcp_lease_expired, state) do
-    case state.status do
-      "static" -> state
-      _ -> configure_with_dynamic_ip(state)
-    end
-    |> respond :noreply
+    state.status
+    |> renew_dhcp(state)
+    |> respond(:noreply)
   end
+
+  defp renew_dhcp("static", state), do: state
+  defp renew_dhcp(_, state), do: configure_with_dynamic_ip(state)
 
   # called periodically to try to see if a dhcp server came back
   # online
   def handle_info(:ip4ll_dhcp_retry, state) do
     params = raw_dhcp_request(state)
-    case params[:status] do
-      "bound" -> configure_dhcp(state, params)
-      "renew" -> configure_dhcp(state, params)
-      _ -> schedule_ip4ll_dhcp_retry(state)
-    end
-    |> respond :noreply
+
+    params[:status]
+    |> conf_dhcp_on_status(state, params)
+    |> respond(:noreply)
   end
+
+  defp conf_dhcp_on_status("bound", state, params), do: configure_dhcp(state, params)
+  defp conf_dhcp_on_status("renew", state, params), do: configure_dhcp(state, params)
+  defp conf_dhcp_on_status(_, state, _), do: schedule_ip4ll_dhcp_retry(state)
 
   defp schedule_ip4ll_dhcp_retry(state) do
     interval = dhcp_retry_interval(state.dhcp_retries)
@@ -166,4 +169,3 @@ defmodule Nerves.IO.Ethernet.Server do
   defp respond(t, atom), do: {atom, t}
 
 end
-

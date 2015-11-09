@@ -59,4 +59,3 @@ defmodule Mocks.IP do
   defp table(interface), do: (:"mocks_ip_#{interface}")
 
 end
-
