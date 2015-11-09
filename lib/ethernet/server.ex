@@ -54,9 +54,6 @@ defmodule Nerves.IO.Ethernet.Server do
     |> respond(:noreply)
   end
 
-  defp renew_dhcp("static", state), do: state
-  defp renew_dhcp(_, state), do: configure_with_dynamic_ip(state)
-
   # called periodically to try to see if a dhcp server came back
   # online
   def handle_info(:ip4ll_dhcp_retry, state) do
@@ -66,6 +63,9 @@ defmodule Nerves.IO.Ethernet.Server do
     |> conf_dhcp_on_status(state, params)
     |> respond(:noreply)
   end
+
+  defp renew_dhcp("static", state), do: state
+  defp renew_dhcp(_, state), do: configure_with_dynamic_ip(state)
 
   defp conf_dhcp_on_status("bound", state, params), do: configure_dhcp(state, params)
   defp conf_dhcp_on_status("renew", state, params), do: configure_dhcp(state, params)
