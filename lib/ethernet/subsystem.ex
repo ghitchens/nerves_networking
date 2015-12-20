@@ -30,9 +30,11 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   ]
 
   @doc "Initialize the ethernet subsystem"
-  @spec initialize() :: {:ok, String.t} | {:error, reason}
+  @spec initialize() :: :ok | {:error, reason}
   def initialize do
-    ensure_udhcpc_setup
+    Logger.debug "initializing Ethernet Subsystem"
+    ensure_udhcpc_setup!
+    :ok
   end
 
   @doc "Set the link state of an interface up or down"
@@ -87,9 +89,14 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   # form
   defp parse_udhcpc_response(response) do
     Logger.debug inspect(response)
-    [_, [last_response]] = Regex.scan ~r/\[.*\]/sr, response
-    Regex.scan(~r/(\w+='.+')\n/r, last_response)
-    |> Enum.map &cleanup_kv/1
+    case (Regex.scan ~r/\[.*\]/sr, response) do
+      [_, [last_response]] ->
+        Regex.scan(~r/(\w+='.+')\n/r, last_response)
+        |> Enum.map &cleanup_kv/1
+      _ ->
+        Logger.error "#{__MODULE__} udhcpc invalid response: #{response}" 
+        []
+    end
   end
 
   # respond only with keys that are useful for dhcp
@@ -105,11 +112,10 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   end
 
   # write a script for udhcpc to report dhcp results with
-  defp ensure_udhcpc_setup do
+  defp ensure_udhcpc_setup! do
     udhcpc_script="#!/bin/sh\necho [\necho status=\\'$1\\'\nset\necho ]\n"
-    File.write @udhcpc_script_path, udhcpc_script
-    File.chmod @udhcpc_script_path, 0777
-    {:ok, nil}
+    File.write! @udhcpc_script_path, udhcpc_script
+    File.chmod! @udhcpc_script_path, 0777
   end
 
   defp ip_cmd(cmd) do
