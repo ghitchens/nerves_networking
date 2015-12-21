@@ -115,7 +115,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   defp ensure_udhcpc_setup! do
     udhcpc_script="#!/bin/sh\necho [\necho status=\\'$1\\'\nset\necho ]\n"
     File.write! @udhcpc_script_path, udhcpc_script
-    File.chmod! @udhcpc_script_path, 0777
+    File.chmod! @udhcpc_script_path, 0o777
   end
 
   defp ip_cmd(cmd) do

@@ -4,7 +4,7 @@ defmodule Nerves.IO.Ethernet.Mixfile do
 
   def project, do: [
     app: :nerves_io_ethernet,
-    version: version,
+    version: "0.4.1-pre",
     elixir: "~> 1.0",
     deps: deps,
     description: "Ethernet support for the Nerves Framework",
@@ -17,8 +17,11 @@ defmodule Nerves.IO.Ethernet.Mixfile do
            source_url: "https://github.com/nerves-project/nerves_io_ethernet"]
   ]
 
-  def application, do: [applications: [:logger]]
-
+  def application, do: [
+    applications: [:logger],
+    mod: {Nerves.IO.Ethernet, []}
+  ]
+  
   defp deps, do: [
     {:earmark, "~> 0.1", only: [:dev, :docs]},
     {:ex_doc, "~> 0.8", only: [:dev, :docs]}
@@ -38,4 +41,5 @@ defmodule Nerves.IO.Ethernet.Mixfile do
       _ -> "0.0.0-dev"
     end
   end
+  
 end
