@@ -66,16 +66,18 @@ defmodule Nerves.IO.Ethernet do
   """
 
   use Application
+  require Logger
 
-  @alias Nerves.IO.Ethernet
+  alias Nerves.IO.Ethernet
 
   @type interface :: Atom
   @type settings :: Dict.t
   @type reason :: any
 
   def start(_type, _args) do
-    Subsystem.initialize
-    Ethernet.Supervisor.start_link()
+    Logger.debug "#{__MODULE__} Starting"
+    Ethernet.Subsystem.initialize
+    {:ok, self}  # need supervisor
   end
 
   @doc """
@@ -83,7 +85,8 @@ defmodule Nerves.IO.Ethernet do
   """
   @spec setup(interface, settings) :: {:ok, pid} | {:error, reason}
   def setup(interface, settings \\ []) do
-     GenServer.start(Nerves.IO.Ethernet.Server, {interface, settings},
+    Logger.debug "#{__MODULE__} Setup(#{interface}, #{inspect settings})"
+    GenServer.start(Nerves.IO.Ethernet.Server, {interface, settings},
                     [name: interface_process(interface)])
   end
 

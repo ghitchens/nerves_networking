@@ -12,7 +12,7 @@ defmodule Nerves.IO.Ethernet.Test do
 
   require Logger
   use ExUnit.Case, async: true
-
+  
   test "ethernet comes up configured in presence of dhcp server" do
     interface = :eth_401
     dhcp_config = %{ip: "10.0.0.5", router: "10.0.0.1", status: "bound",
