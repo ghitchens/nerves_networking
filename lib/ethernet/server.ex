@@ -134,6 +134,10 @@ defmodule Nerves.IO.Ethernet.Server do
         nil -> nil
         router -> Subsystem.set_router(interface, router)
       end
+      case {params[:dns], params[:domain]} do
+        {nil, _} -> nil
+        {dns, domain} -> Subsystem.set_resolv_conf(dns, domain)
+      end
     end
     update_and_announce(state, params)
   end

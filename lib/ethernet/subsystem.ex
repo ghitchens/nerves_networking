@@ -21,6 +21,10 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   @type interface :: String.t
 
   @udhcpc_script_path "/tmp/udhcpc.sh"
+  @resolv_conf_path (case Mix.env do
+    :test -> "/tmp/resolv.conf"
+    _ -> "/etc/resolv.conf"
+  end)
   @default_hostname "nerves"
 
   @useful_dhcp_keys  [
@@ -69,7 +73,33 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   def set_router(interface, router) do
     ip_cmd "route add default via #{router} dev #{interface}"
   end
+    
+  @doc "set resolver configuration"
+  @spec set_resolv_conf(String.t, String.t) :: :ok
+  def set_resolv_conf(dns, domain \\ nil) do
+    resolv_conf = resolv_domain(domain) <> resolv_dns(dns) <> "\n"
+    Logger.debug "setting resolver config: #{resolv_conf}"
+    File.write! @resolv_conf_path, resolv_conf
+    :ok
+  end
 
+  # given a string like "4.4.4.4 8.8.8.8", return resolv.conf lines with newlines
+  def resolv_dns(dns) do
+    dns
+    |> String.split(" ")
+    |> Enum.map(&("nameserver #{&1}"))
+    |> Enum.join("\n")
+  end
+
+  # given a domain return the resolver domain line with newline
+  defp resolv_domain(domain) do
+    case domain do
+      "" -> ""
+      nil -> ""
+      d -> "domain #{d}\n"
+    end
+  end
+  
   @doc """
   Makes a dhcp request on the specified interface with optional hostname, and
   returns `Dict` with standardized keys for the result of the DHCP request.
@@ -88,7 +118,6 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   # responses to select the last (most relelvant) response, and convert to Dict
   # form
   defp parse_udhcpc_response(response) do
-    Logger.debug inspect(response)
     case (Regex.scan ~r/\[.*\]/sr, response) do
       [_, [last_response]] ->
         Regex.scan(~r/(\w+='.+')\n/r, last_response)

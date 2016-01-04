@@ -5,10 +5,10 @@ alias Test.Mocks
 defmodule Mocks.UDHCPC do
 
   @moduledoc false
-  @default_params %{status: "error", lease: "", ip: "", mask: "",
+  @default_params %{status: "error", lease: "", ip: "", mask: "", domain: "",
                     subnet: "", router: "", dns1: "", dns2: "", lease: ""}
   require Logger
-
+  
   def init(interface) do
     interface
     |> table
@@ -100,6 +100,7 @@ defmodule Mocks.UDHCPC do
   ROOTDIR='/srv/erlang'
   TERM='vt100'
   dns='#{p.dns1} #{p.dns2}'
+  domain='#{p.domain}'
   interface='#{interface}'
   ip='#{p.ip}'
   lease='#{p.lease}'

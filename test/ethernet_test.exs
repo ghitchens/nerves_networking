@@ -15,7 +15,7 @@ defmodule Nerves.IO.Ethernet.Test do
   
   test "ethernet comes up configured in presence of dhcp server" do
     interface = :eth_401
-    dhcp_config = %{ip: "10.0.0.5", router: "10.0.0.1", status: "bound",
+    dhcp_config = %{ip: "10.0.0.5", router: "10.0.0.1", status: "bound", domain: "mynet.net",
                     mask: "8", subnet: "255.0.0.0", lease: "60",
                     dns1: "4.4.4.4", dns2: "6.6.6.6" }
     Mocks.IP.init interface
@@ -29,7 +29,7 @@ defmodule Nerves.IO.Ethernet.Test do
 
   test "ethernet handles different dhcp parameeters (renew)" do
     interface = :eth_202
-    dhcp_config = %{ip: "192.168.12.88", router: "192.168.12.1",
+    dhcp_config = %{ip: "192.168.12.88", router: "192.168.12.1", domain: "mynet.net.",
                     mask: "24", subnet: "255.255.255.0", lease: "60",
                     dns1: "4.4.4.4", dns2: "6.6.6.6", status: "renew"}
     Mocks.IP.init interface

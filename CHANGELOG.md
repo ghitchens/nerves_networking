@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.0-dev (2016-01-03)
+
+* support for proper resolver (dns) setup
+
 ## v0.4.0-dev (2015-10-29)
 
 * new testing framework
