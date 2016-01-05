@@ -49,7 +49,8 @@ You can setup static IP parameters by doing something more like this:
 ```elixir
 alias Nerves.IO.Ethernet
 {:ok, _pid} = Ethernet.setup :eth0, mode: "static", ip: "10.0.0.5", router:
-            "10.0.0.1", mask: "16", subnet: "255.255.0.0", mode: "static"
+            "10.0.0.1", mask: "16", subnet: "255.255.0.0", mode: "static",
+            dns: "8.8.8.8 8.8.4.4"
 ```
 
 ## WORK LIST
