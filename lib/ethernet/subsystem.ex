@@ -108,7 +108,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   """
   @spec dhcp_request(interface, String.t) :: Dict.t
   def dhcp_request(interface, hostname) do
-    "udhcpc -n -q -f -s #{@udhcpc_script_path} --interface=#{interface} -x hostname: #{hostname || @default_hostname}"
+    "udhcpc -n -q -f -s #{@udhcpc_script_path} --interface=#{interface} -H #{hostname || @default_hostname}"
     |> os_cmd
     |> parse_udhcpc_response
     |> filter_to_only_useful_dhcp_keys
