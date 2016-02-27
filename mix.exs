@@ -1,6 +1,6 @@
 defmodule Nerves.IO.Ethernet.Mixfile do
 
-  @version "0.5.0-pre"
+  @version "0.5.0"
 
   use Mix.Project
 
