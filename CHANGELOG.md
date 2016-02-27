@@ -1,5 +1,7 @@
 # Changelog
 
+## v0.5.1-dev
+
 ## v0.5.0 (2016-02-27)
 * New Features
   * support for proper resolver (dns) setup
