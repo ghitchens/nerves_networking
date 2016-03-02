@@ -97,7 +97,7 @@ defmodule Nerves.IO.Ethernet do
   def settings(interface) do
     interface
     |> interface_process
-    |> GenServer.call :settings
+    |> GenServer.call(:settings)
   end
 
   # return a process name for a process

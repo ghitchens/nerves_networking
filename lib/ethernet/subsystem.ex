@@ -73,7 +73,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   def set_router(interface, router) do
     ip_cmd "route add default via #{router} dev #{interface}"
   end
-    
+
   @doc "set resolver configuration"
   @spec set_resolv_conf(String.t, String.t) :: :ok
   def set_resolv_conf(dns, domain \\ nil) do
@@ -99,7 +99,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
       d -> "domain #{d}\n"
     end
   end
-  
+
   @doc """
   Makes a dhcp request on the specified interface with optional hostname, and
   returns `Dict` with standardized keys for the result of the DHCP request.
@@ -121,7 +121,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
     case (Regex.scan ~r/\[.*\]/sr, response) do
       [_, [last_response]] ->
         Regex.scan(~r/(\w+='.+')\n/r, last_response)
-        |> Enum.map &cleanup_kv/1
+        |> Enum.map(&cleanup_kv/1)
       _ ->
         Logger.error "#{__MODULE__} udhcpc invalid response: #{response}" 
         []
