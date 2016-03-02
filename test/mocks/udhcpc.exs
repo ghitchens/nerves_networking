@@ -41,7 +41,7 @@ defmodule Mocks.UDHCPC do
   # makes the assumption we have an interfacename and hostname passed
   def udhcpc <<"-n -q -f -s /tmp/udhcpc.sh ", args :: binary>> do
     [[_, interface]] = Regex.scan ~r/--interface=(\w+) /r,args
-    [[_, hostname]] = Regex.scan ~r/hostname: (\w*+)/r,args
+    [[_, hostname]] = Regex.scan ~r/-H (\w*+)/r,args
     exec_udhcpc(interface, hostname)
   end
 
