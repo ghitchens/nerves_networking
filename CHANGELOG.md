@@ -1,8 +1,14 @@
 # Changelog
 
-## v0.5.0-dev (2016-01-03)
+## v0.5.1-dev
 
-* support for proper resolver (dns) setup
+## v0.5.0 (2016-02-27)
+* New Features
+  * support for proper resolver (dns) setup
+  * if hostname is not passed, first try to use the second part of the node name, then the default "nerves"
+* Bug Fixes
+  * fixed flags being passed to udhcpc for hostname
+
 
 ## v0.4.0-dev (2015-10-29)
 
@@ -31,4 +37,3 @@
 
 - extracted from proprietary "echo" project
 - added GenEvent-based notifier to breakout Hub dependency
-

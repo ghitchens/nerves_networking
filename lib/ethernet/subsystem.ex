@@ -107,8 +107,8 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   Uses `udhcpc` in non-daemon mode to handle dhcp.
   """
   @spec dhcp_request(interface, String.t) :: Dict.t
-  def dhcp_request(interface, hostname) do
-    "udhcpc -n -q -f -s #{@udhcpc_script_path} --interface=#{interface} -x hostname: #{hostname || @default_hostname}"
+  def dhcp_request(interface, host) do
+    "udhcpc -n -q -f -s #{@udhcpc_script_path} --interface=#{interface} -H #{hostname(host)}"
     |> os_cmd
     |> parse_udhcpc_response
     |> filter_to_only_useful_dhcp_keys
@@ -176,5 +176,17 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   defp os_module do
     Application.get_env :nerves_io_ethernet, :os_module, :os
   end
+
+  defp hostname(nil) do
+    n = node
+      |> to_string
+      |> String.split("@")
+      |> Enum.at(1)
+    case n do
+      nil -> @default_hostname
+      host -> host
+    end
+  end
+  defp hostname(host), do: host
 
 end
