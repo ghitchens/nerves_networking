@@ -1,6 +1,8 @@
 # Changelog
 
-## v0.5.1-dev
+## v0.5.1 (2016-03-02)
+
+* fixed bugs with dhcp and ipv4ll
 
 ## v0.5.0 (2016-02-27)
 * New Features
