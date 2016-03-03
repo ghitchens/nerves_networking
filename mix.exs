@@ -1,6 +1,6 @@
 defmodule Nerves.IO.Ethernet.Mixfile do
 
-  @version "0.5.1-dev"
+  @version "0.5.1"
 
   use Mix.Project
 
@@ -20,7 +20,7 @@ defmodule Nerves.IO.Ethernet.Mixfile do
   ]
 
   def application, do: [
-    applications: [:logger],
+    applications: [:logger, :crypto],
     mod: {Nerves.IO.Ethernet, []}
   ]
 

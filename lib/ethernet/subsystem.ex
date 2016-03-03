@@ -161,7 +161,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   # TODO below should likely be moved to public in Nerves.Utils
   defp os_cmd(cmd) do
     response = unlogged_os_cmd(cmd)
-    Logger.debug "#{__MODULE__} os_cmd: #{inspect cmd} -> #{inspect response}"
+    #Logger.debug "#{__MODULE__} os_cmd: #{inspect cmd} -> #{inspect response}"
     response
   end
 
