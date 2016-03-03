@@ -54,7 +54,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   @doc "Return the MAC address of the specified interface"
   @spec mac_address(interface) :: String.t
   def mac_address(interface) do
-    File.read "/sys/class/net/#{interface}/address"
+    File.read! "/sys/class/net/#{interface}/address"
   end
 
   @doc "add an address to the interface"
