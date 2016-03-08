@@ -74,6 +74,12 @@ defmodule Nerves.IO.Ethernet.Subsystem do
     ip_cmd "route add default via #{router} dev #{interface}"
   end
 
+  @doc "set the default gateway by interface"
+  @spec set_default_gateway(interface) :: :ok
+  def set_default_gateway(interface) do
+    ip_cmd "route add default dev #{interface}"
+  end
+
   @doc "set resolver configuration"
   @spec set_resolv_conf(String.t, String.t) :: :ok
   def set_resolv_conf(dns, domain \\ nil) do
