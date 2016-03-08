@@ -56,6 +56,10 @@ defmodule Mocks.IP do
     "ok"
   end
 
+  def ip <<"route add default dev ", interface :: binary>> do
+    "ok"
+  end
+
   defp table(interface), do: (:"mocks_ip_#{interface}")
 
 end

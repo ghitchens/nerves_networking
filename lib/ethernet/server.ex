@@ -138,6 +138,7 @@ defmodule Nerves.IO.Ethernet.Server do
         {nil, _} -> nil
         {dns, domain} -> Subsystem.set_resolv_conf(dns, domain)
       end
+      Subsystem.set_default_gateway(interface)
     end
     update_and_announce(state, params)
   end
