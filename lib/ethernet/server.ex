@@ -129,6 +129,7 @@ defmodule Nerves.IO.Ethernet.Server do
     Logger.debug "#{Subsystem} configure: #{interface}, #{inspect params}"
     if params[:ip] && params[:mask] do
       Subsystem.flush_addresses(interface)
+      Subsystem.flush_default_gateways
       Subsystem.add_address(interface, params[:ip], params[:mask])
       case params[:router] do
         nil -> nil
