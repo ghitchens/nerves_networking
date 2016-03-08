@@ -68,6 +68,12 @@ defmodule Nerves.IO.Ethernet.Subsystem do
     ip_cmd "addr flush dev #{interface}"
   end
 
+  @doc "clear the list of default gateways"
+  @spec flush_default_gateways :: :ok
+  def flush_default_gateways do
+    ip_cmd "route del default"
+  end
+
   @doc "set the router (default gateway) for the inteface"
   @spec set_router(interface, ip_address) :: :ok
   def set_router(interface, router) do

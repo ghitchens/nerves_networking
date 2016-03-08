@@ -48,6 +48,10 @@ defmodule Mocks.IP do
     "ok"
   end
 
+  def ip <<"route del default">> do
+    "ok"
+  end
+
   def ip <<"route add default via ", rest :: binary>> do
     [router, "dev", b_interface] = String.split(rest)
     b_interface
