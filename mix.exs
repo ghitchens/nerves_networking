@@ -1,27 +1,27 @@
-defmodule Nerves.IO.Ethernet.Mixfile do
+defmodule Nerves.Networking.Mixfile do
 
   @version "0.5.1"
 
   use Mix.Project
 
   def project, do: [
-    app: :nerves_io_ethernet,
+    app: :nerves_networking,
     version: @version,
     elixir: "~> 1.0",
     deps: deps,
-    description: "Nerves Ethernet IO Module",
+    description: "Nerves Networking.IO Module",
     # Hex
     package: package,
     # ExDoc
-    name: "Nerves.IO.Ethernet",
+    name: "Nerves.Networking",
     docs: [source_ref: "v#{@version}",
-           main: "Nerves.IO.Ethernet",
-           source_url: "https://github.com/nerves-project/nerves_io_ethernet"]
+           main: "Nerves.Networking",
+           source_url: "https://github.com/nerves-project/nerves_networking"]
   ]
 
   def application, do: [
     applications: [:logger, :crypto],
-    mod: {Nerves.IO.Ethernet, []}
+    mod: {Nerves.Networking, []}
   ]
 
   defp deps, do: [
@@ -32,7 +32,7 @@ defmodule Nerves.IO.Ethernet.Mixfile do
   defp package, do: [
     maintainers: ["Garth Hitchens", "Chris Dutton"],
     licenses: ["MIT"],
-    links: %{github: "https://github.com/nerves-project/nerves_io_ethernet"},
+    links: %{github: "https://github.com/nerves-project/nerves_networking"},
     files: ~w(lib config) ++
            ~w(README.md CHANGELOG.md LICENSE mix.exs)
   ]

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.6.0-dev (2016-03-08)
+
+* renamed module nerves_networking after much discussion
+
 ## v0.5.1 (2016-03-02)
 
 * fixed bugs with dhcp and ipv4ll
