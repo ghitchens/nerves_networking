@@ -27,7 +27,7 @@ def application, do: [
 # add to your dependencies
 def deps do
   [.....
-  {:nerves_networking, github: "nerves-project/nerves_io_ethernet"},
+  {:nerves_networking, github: "nerves-project/nerves_networking"},
   ....]
 end
 ```
