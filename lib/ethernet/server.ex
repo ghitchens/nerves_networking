@@ -112,7 +112,7 @@ defmodule Nerves.IO.Ethernet.Server do
   end
 
   defp raw_dhcp_request(state) do
-    Subsystem.dhcp_request(state.interface, state[:hostname])
+    Subsystem.dhcp_request(state.interface, state[:hostname], state.dhcp_retries)
   end
 
   defp configure_dhcp(state, params) do

@@ -106,9 +106,9 @@ defmodule Nerves.IO.Ethernet.Subsystem do
 
   Uses `udhcpc` in non-daemon mode to handle dhcp.
   """
-  @spec dhcp_request(interface, String.t) :: Dict.t
-  def dhcp_request(interface, host) do
-    "udhcpc -n -q -f -s #{@udhcpc_script_path} --interface=#{interface} -x hostname: #{hostname(host)}"
+  @spec dhcp_request(interface, String.t, String.t) :: Dict.t
+  def dhcp_request(interface, host, retries) do
+    "udhcpc -n -q -f -s #{@udhcpc_script_path} --timeout=#{dhcp_timeout(retries)} --interface=#{interface} -x hostname: #{hostname(host)}"
     |> os_cmd
     |> parse_udhcpc_response
     |> filter_to_only_useful_dhcp_keys
@@ -188,5 +188,10 @@ defmodule Nerves.IO.Ethernet.Subsystem do
     end
   end
   defp hostname(host), do: host
+
+  # For the first DHCPDISCOVER use default 3 second timeout
+  # For subsequent use longer timeout
+  defp dhcp_timeout(0), do: 3
+  defp dhcp_timeout(_), do: 10
 
 end
