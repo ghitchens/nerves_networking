@@ -81,7 +81,7 @@ defmodule Nerves.IO.Ethernet.Server do
 
   # retry after 10 seconds for the first 10 retries, then 1 min
   defp dhcp_retry_interval(tries) when tries >= 10, do: 60000
-  defp dhcp_retry_interval(_tries), do: 10000
+  defp dhcp_retry_interval(_tries), do: 15000
 
   # update changes and announce, returning new state
   defp update_and_announce(state, changes) do
@@ -112,7 +112,7 @@ defmodule Nerves.IO.Ethernet.Server do
   end
 
   defp raw_dhcp_request(state) do
-    Subsystem.dhcp_request(state.interface, state[:hostname])
+    Subsystem.dhcp_request(state.interface, state[:hostname], state.dhcp_retries)
   end
 
   defp configure_dhcp(state, params) do
