@@ -3,7 +3,7 @@ defmodule Nerves.Networking.Server do
   @moduledoc false
 
   alias Nerves.Networking.Subsystem
-
+  use GenServer
   require Logger
 
   @public_keys [
