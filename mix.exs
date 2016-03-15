@@ -9,7 +9,7 @@ defmodule Nerves.Networking.Mixfile do
     version: @version,
     elixir: "~> 1.0",
     deps: deps,
-    description: "Nerves Networking.IO Module",
+    description: "Nerves Networking Module",
     # Hex
     package: package,
     # ExDoc
