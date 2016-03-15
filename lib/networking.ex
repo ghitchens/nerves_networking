@@ -79,7 +79,7 @@ defmodule Nerves.Networking do
   @spec setup(interface, settings) :: {:ok, pid} | {:error, reason}
   def setup(interface, settings \\ []) do
     Logger.debug "#{__MODULE__} Setup(#{interface}, #{inspect settings})"
-    GenServer.start(Networking.Server, {interface, settings},
+    GenServer.start(Nerves.Networking.Server, {interface, settings},
                     [name: interface_process(interface)])
   end
 
