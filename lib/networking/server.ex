@@ -1,9 +1,9 @@
-defmodule Nerves.IO.Ethernet.Server do
+defmodule Nerves.Networking.Server do
 
   @moduledoc false
 
-  alias Nerves.IO.Ethernet.Subsystem
-
+  alias Nerves.Networking.Subsystem
+  use GenServer
   require Logger
 
   @public_keys [
@@ -14,7 +14,7 @@ defmodule Nerves.IO.Ethernet.Server do
   ]
 
   def init({interface, settings}) do
-    Logger.debug "Ethernet.Server(#{inspect interface}): #{inspect settings}"
+    Logger.debug "Networking.Server(#{inspect interface}): #{inspect settings}"
     Subsystem.link_set(interface, :up)
     {:ok, ref} = GenEvent.start_link()
     %{notifier: ref, interface: interface, mode: "auto", status: "init",

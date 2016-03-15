@@ -1,5 +1,5 @@
-alias Nerves.IO.Ethernet
-alias Ethernet.Test
+alias Nerves.Networking
+alias Networking.Test
 alias Test.Mocks
 
 defmodule Mocks.UDHCPC do
@@ -8,7 +8,7 @@ defmodule Mocks.UDHCPC do
   @default_params %{status: "error", lease: "", ip: "", mask: "", domain: "",
                     subnet: "", router: "", dns1: "", dns2: "", lease: ""}
   require Logger
-  
+
   def init(interface) do
     interface
     |> table

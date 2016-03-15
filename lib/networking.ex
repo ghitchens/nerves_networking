@@ -1,34 +1,27 @@
-defmodule Nerves.IO.Ethernet do
+defmodule Nerves.Networking do
 
   @moduledoc """
-  Manages one or more Ethernet interfaces on a nerves-based system.
+  Manages one or more network interfaces on a nerves-based system.
 
-  # THIS MODULE NOT READY YET! #
-
-  This package is currently being migrated into nerves.  It is not guaranteed
-  to be in a working state.
-
-  ## Usage
+  ## Basic Usage
 
   ```elixir
-  alias Nerves.IO.Ethernet
-
-  Ethernet.setup :eth0, state: auto
+  alias Nerves.Networking
+  Networking.setup :eth0, state: auto
   ```
-
   Sets up (configures) an adapter with the associated settings. The above
   will try to acquire a ipv4 address via DHCP, reverting to AIPA/ipv4ll
   addressing configuration if that fails, while retrying DHCP occasionally.
 
   ```elixir
-  Ethernet.setup :eth0, mode: static, address: "192.168.5.8",
+  Networking.setup :eth0, mode: static, address: "192.168.5.8",
         router: "192.168.5.1", mask: "255.255.255.0"
   ```
   Forces static configuration.
 
   ## Notes about AIPA / ipv4ll addressing
 
-  If a DHCP IP cannot be obtained, `Nerves.IO.Ethernet` automatically
+  If a DHCP IP cannot be obtained, `Nerves.Networking` automatically
   configures an address on te 169.254.0.0/16 network.  Microsoft
   calls this AIPA, and the IETF calls it ipv4ll (ipv4 link local)
   addressing.
@@ -68,7 +61,7 @@ defmodule Nerves.IO.Ethernet do
   use Application
   require Logger
 
-  alias Nerves.IO.Ethernet
+  alias Nerves.Networking
 
   @type interface :: Atom
   @type settings :: Dict.t
@@ -76,17 +69,17 @@ defmodule Nerves.IO.Ethernet do
 
   def start(_type, _args) do
     Logger.debug "#{__MODULE__} Starting"
-    Ethernet.Subsystem.initialize
+    Networking.Subsystem.initialize
     {:ok, self}  # need supervisor
   end
 
   @doc """
-  Configure and start managing an Ethernet interface.
+  Configure and start managing an Networking interface.
   """
   @spec setup(interface, settings) :: {:ok, pid} | {:error, reason}
   def setup(interface, settings \\ []) do
     Logger.debug "#{__MODULE__} Setup(#{interface}, #{inspect settings})"
-    GenServer.start(Nerves.IO.Ethernet.Server, {interface, settings},
+    GenServer.start(Nerves.Networking.Server, {interface, settings},
                     [name: interface_process(interface)])
   end
 

@@ -1,4 +1,4 @@
-defmodule Nerves.IO.Ethernet.Subsystem do
+defmodule Nerves.Networking.Subsystem do
 
   @moduledoc """
   Implements an ethernet subsystem based on using the `ip` and `udhcpc` CLI.
@@ -6,7 +6,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
 
   This doesn't rely on using `udhcpc` as a daemon, but instead simply invokes
   it to perform low level configuration, assuming the
-  `Nerves.IO.Ethernet` module handles daemon-level functionality like
+  `Nerves.Networking` module handles daemon-level functionality like
   DHCP renewal, etc.
 
   Major Limitations:
@@ -36,7 +36,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
   @doc "Initialize the ethernet subsystem"
   @spec initialize() :: :ok | {:error, reason}
   def initialize do
-    Logger.debug "initializing Ethernet Subsystem"
+    Logger.debug "initializing Networking.Subsystem"
     ensure_udhcpc_setup!
     :ok
   end
@@ -174,7 +174,7 @@ defmodule Nerves.IO.Ethernet.Subsystem do
 
   # config underlying :os module to allow creating a mock for :os.cmd
   defp os_module do
-    Application.get_env :nerves_io_ethernet, :os_module, :os
+    Application.get_env :nerves_networking, :os_module, :os
   end
 
   defp hostname(nil) do

@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.6.0 (2016-03-15)
+
+* renamed module nerves_networking
+* other minor cleanups
+* changed from MIT to Apache2 license
+
 ## v0.5.1 (2016-03-02)
 
 * fixed bugs with dhcp and ipv4ll

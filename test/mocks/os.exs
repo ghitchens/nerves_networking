@@ -1,5 +1,5 @@
-alias Nerves.IO.Ethernet
-alias Ethernet.Test
+alias Nerves.Networking
+alias Networking.Test
 alias Test.Mocks
 
 defmodule Mocks.OS do

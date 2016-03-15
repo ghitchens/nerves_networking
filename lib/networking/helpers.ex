@@ -1,4 +1,4 @@
-defmodule Nerves.IO.Ethernet.Helpers do
+defmodule Nerves.Networking.Helpers do
 
   @moduledoc false
   require Logger
