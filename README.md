@@ -55,7 +55,7 @@ alias Nerves.Networking
 
 ## WORK LIST
 
-Some of the things currently on the TO-DO list before this is considered finsished:
+Some of the things currently on the TO-DO list before this is considered finished:
 
 - [ ] Finish documentation for callback models
 - [ ] Finish documentation for modes (:dynamic, :static)
