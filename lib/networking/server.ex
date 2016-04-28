@@ -58,7 +58,6 @@ defmodule Nerves.Networking.Server do
   # online
   def handle_info(:ip4ll_dhcp_retry, state) do
     params = raw_dhcp_request(state)
-
     params[:status]
     |> conf_dhcp_on_status(state, params)
     |> respond(:noreply)

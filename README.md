@@ -8,7 +8,7 @@ A [Nerves](http://nerves-project.org) module to handle configuring IP networking
 * Supports multiple address setting modes:
     * DHCP (via `udhcpc`), including handling timeouts and re-acquisition
     * Static Address configuration
-    * IP4LL/AIPA automatic address configuration
+    * IP4LL/APIPA automatic address configuration
 * Easy callback-based notification of device state changes
 
 ### Setup
@@ -59,6 +59,6 @@ Some of the things currently on the TO-DO list before this is considered finsish
 
 - [ ] Finish documentation for callback models
 - [ ] Finish documentation for modes (:dynamic, :static)
-- [ ] Tests for APIA/IP4LL currently fail and are disabled (bad test)
+- [ ] Tests for APIPA/IP4LL currently fail and are disabled (bad test)
 - [ ] UDP Configuration module made of broken-out parts
 - [ ] Configuration storage module made of broken-out parts
