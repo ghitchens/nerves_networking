@@ -70,17 +70,37 @@ defmodule Nerves.Networking do
   def start(_type, _args) do
     Logger.debug "#{__MODULE__} Starting"
     Networking.Subsystem.initialize
-    {:ok, self}  # need supervisor
+    {:ok, self}  # REVIEW need supervisor?  maybe, maybe not.
   end
 
   @doc """
-  Configure and start managing an Networking interface.
+  Start managing and configure a Networking interface.
+
+  Settings are described under `configure/2`.   If settings are not
+  specified, the interface is setup in automatic mode.
   """
   @spec setup(interface, settings) :: {:ok, pid} | {:error, reason}
   def setup(interface, settings \\ []) do
     Logger.debug "#{__MODULE__} Setup(#{interface}, #{inspect settings})"
     GenServer.start(Nerves.Networking.Server, {interface, settings},
                     [name: interface_process(interface)])
+  end
+
+  @doc """
+  Configure a network interface.
+
+  The network interface must first be setup using `setup/2`.
+
+  Settings is a `Keyword.t`, as follows...
+
+  - `:mode` - either `"static"` (static configuration) or `"auto"`  (dhcp with fallback to ipv4ll).  Defaults to auto, but setting `:ip` or `:subnet` implies static configuration.
+  """
+  @spec configure(interface, settings) :: Dict.t
+  def configure(interface, settings \\ []) do
+    Logger.debug "#{__MODULE__} Configure(#{interface}, #{inspect settings})"
+    interface
+    |> interface_process
+    |> GenServer.call({:configure, settings})
   end
 
   @doc """

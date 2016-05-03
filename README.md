@@ -42,6 +42,8 @@ alias Nerves.Networking
 
 For a simple example, see the [Hello Network](https://github.com/nerves-project/nerves-examples/tree/master/hello_network) example.
 
+
+
 ### Static IP configuration
 
 You can setup static IP parameters by doing something more like this:

@@ -53,6 +53,29 @@ defmodule Nerves.Networking.Test do
     test_ip_mock_matches(interface, static_config)
   end
 
+  test "ethernet can be reconfigured statically and then dynamically " do
+    interface = :eth_209
+    dhcp_config = %{ip: "192.168.12.88", router: "192.168.12.1", domain: "mynet.net.",
+                    mask: "24", subnet: "255.255.255.0", lease: "60",
+                    dns1: "4.4.4.4", dns2: "6.6.6.6", status: "renew"}
+    static_config = %{ip: "10.0.0.5", router: "10.0.0.1",
+             mask: "16", subnet: "255.255.0.0", mode: "static",
+             dns1: "4.4.4.4", dns2: "6.6.6.6"}
+    Mocks.IP.init interface
+    Mocks.UDHCPC.init interface
+    Mocks.UDHCPC.setup interface, dhcp_config
+    {:ok, pid} = Networking.setup interface
+    assert is_pid(pid)
+    test_module_settings_match(interface, dhcp_config)
+    test_ip_mock_matches(interface, dhcp_config)
+    _settings = Networking.configure interface, static_config
+    test_ip_mock_matches(interface, static_config)
+    _settings = Networking.configure interface, mode: "auto"
+    test_ip_mock_matches(interface, dhcp_config)
+#    test_module_settings_match(interface, dhcp_config)
+    assert is_pid(pid)
+  end
+
   # test "dhcp ethernet that fails gets ipv4LL address" do
   #   interface = :eth_042
   #   Mocks.IP.init interface

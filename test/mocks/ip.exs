@@ -1,6 +1,7 @@
 alias Nerves.Networking
 alias Networking.Test
 alias Test.Mocks
+require Logger
 
 defmodule Mocks.IP do
 
@@ -26,6 +27,7 @@ defmodule Mocks.IP do
   end
 
   def ip <<"link set ", rest ::binary>> do
+    Logger.debug "MOCK: ip link set #{rest}"
     [b_interface, updn] = String.split(rest)
     b_interface
     |> table
@@ -34,12 +36,14 @@ defmodule Mocks.IP do
   end
 
   def ip <<"addr flush dev ", b_interface :: binary>> do
+    Logger.debug "MOCK: ip addr flush dev #{b_interface}"
     b_interface
     |> flush
     "ok"
   end
 
   def ip <<"addr add ", rest :: binary>> do
+    Logger.debug "MOCK: ip addr add #{rest}"
     [ipandmask, "dev", b_interface] = String.split(rest)
     [ip, mask] = String.split(ipandmask, "/")
     b_interface
@@ -49,6 +53,7 @@ defmodule Mocks.IP do
   end
 
   def ip <<"route add default via ", rest :: binary>> do
+    Logger.debug "MOCK: ip route add default via #{rest}"
     [router, "dev", b_interface] = String.split(rest)
     b_interface
     |> table

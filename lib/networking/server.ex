@@ -1,5 +1,4 @@
 defmodule Nerves.Networking.Server do
-
   @moduledoc false
 
   alias Nerves.Networking.Subsystem
@@ -13,15 +12,19 @@ defmodule Nerves.Networking.Server do
     :mode
   ]
 
-  def init({interface, settings}) do
-    Logger.debug "Networking.Server(#{inspect interface}): #{inspect settings}"
+  def init({interface, config}) do
+    Logger.debug "#{__MODULE__}.init(#{inspect interface}): #{inspect config}"
     Subsystem.link_set(interface, :up)
     {:ok, ref} = GenEvent.start_link()
     %{notifier: ref, interface: interface, mode: "auto", status: "init",
       dhcp_retries: 0}
-    |> Dict.merge(settings)
-    |> setup_interface()
-    |> respond(:ok)
+    |> configure(config)
+    |> respond(:ok)  # REVIEW handle errors properly?!!?
+  end
+
+  def handle_call({:configure, config}, _from, state) do
+    configure(state, config)
+    {:reply, settings(state), state}
   end
 
   def handle_call(:settings, _from, state) do
@@ -34,16 +37,18 @@ defmodule Nerves.Networking.Server do
   end
 
   # given settings, apply to state, and setup interface accordingly
-  defp setup_interface(state) do
-    Logger.debug "setup_interface(#{inspect state})"
-    case state.mode do
-      "static" ->
-        configure_with_static_ip(state)
-      "auto" ->
-        configure_with_dynamic_ip(state)
-      _ ->
-        configure_with_dynamic_ip(state)
+  defp configure(state, settings) do
+    Logger.debug "#{__MODULE__} configure(#{inspect state}, #{inspect settings})"
+    if static_settings?(settings) do
+      configure_interface(state, settings)
+    else
+      configure_with_dynamic_ip(state)
     end
+  end
+
+  # true if settings appear to imply a static configuration
+  defp static_settings?(settings) do
+    settings[:ip] || settings[:mask] || (settings[:subnet]) || (settings[:mode]=="static")
   end
 
   # try renewing dhcp lease upon expiration unless we've been configured
@@ -89,10 +94,6 @@ defmodule Nerves.Networking.Server do
       state.on_change.(public_changes)
     end
     Dict.merge(state, changes)
-  end
-
-  defp configure_with_static_ip(state) do
-    configure_interface(state, state)
   end
 
   # setup the interface to have a dynamic (dhcp or ip4ll) address
