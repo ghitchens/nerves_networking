@@ -24,10 +24,14 @@ defmodule Nerves.Networking.Server do
 
   def handle_call({:configure, config}, _from, state) do
     configure(state, config)
-    {:reply, settings(state), state}
+    |> reply_with_settings
   end
 
   def handle_call(:settings, _from, state) do
+    reply_with_settings(state)
+  end
+
+  defp reply_with_settings(state) do
     {:reply, settings(state), state}
   end
 
@@ -40,7 +44,8 @@ defmodule Nerves.Networking.Server do
   defp configure(state, settings) do
     Logger.debug "#{__MODULE__} configure(#{inspect state}, #{inspect settings})"
     if static_settings?(settings) do
-      configure_interface(state, settings)
+      static_config = Map.merge(settings, %{lease: nil, mode: "static"})
+      configure_interface(state, static_config)
     else
       configure_with_dynamic_ip(state)
     end

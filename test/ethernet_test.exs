@@ -41,16 +41,22 @@ defmodule Nerves.Networking.Test do
     test_ip_mock_matches(interface, dhcp_config)
   end
 
-  test "ethernet can be configured statically" do
+  test "ethernet can be configured statically and reconfigured statically" do
     interface = :eth_s2
     static_config = %{ip: "10.0.0.5", router: "10.0.0.1",
                mask: "16", subnet: "255.255.0.0", mode: "static",
                dns1: "4.4.4.4", dns2: "6.6.6.6"}
+    static_config2 = %{ip: "10.0.10.6", router: "10.0.10.1",
+              mask: "16", subnet: "255.255.255.0", mode: "static",
+              dns1: "4.4.4.4", dns2: "6.6.6.6"}
     Mocks.IP.init interface
     {:ok, pid} = Networking.setup interface, static_config
     assert is_pid(pid)
     test_module_settings_match(interface, static_config)
     test_ip_mock_matches(interface, static_config)
+    _settings = Networking.configure interface, static_config2
+    test_ip_mock_matches(interface, static_config2)
+    test_module_settings_match(interface, static_config2)
   end
 
   test "ethernet can be reconfigured statically and then dynamically " do
@@ -70,9 +76,10 @@ defmodule Nerves.Networking.Test do
     test_ip_mock_matches(interface, dhcp_config)
     _settings = Networking.configure interface, static_config
     test_ip_mock_matches(interface, static_config)
+    test_module_settings_match(interface, static_config)
     _settings = Networking.configure interface, mode: "auto"
     test_ip_mock_matches(interface, dhcp_config)
-#    test_module_settings_match(interface, dhcp_config)
+    test_module_settings_match(interface, dhcp_config)
     assert is_pid(pid)
   end
 
