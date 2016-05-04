@@ -44,7 +44,7 @@ defmodule Nerves.Networking.Server do
   defp configure(state, settings) do
     Logger.debug "#{__MODULE__} configure(#{inspect state}, #{inspect settings})"
     if static_settings?(settings) do
-      static_config = Map.merge(settings, %{lease: nil, mode: "static"})
+      static_config = Dict.merge(settings, %{lease: nil, mode: "static"})
       configure_interface(state, static_config)
     else
       configure_with_dynamic_ip(state)

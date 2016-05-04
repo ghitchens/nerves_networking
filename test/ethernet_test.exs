@@ -64,9 +64,9 @@ defmodule Nerves.Networking.Test do
     dhcp_config = %{ip: "192.168.12.88", router: "192.168.12.1", domain: "mynet.net.",
                     mask: "24", subnet: "255.255.255.0", lease: "60",
                     dns1: "4.4.4.4", dns2: "6.6.6.6", status: "renew"}
-    static_config = %{ip: "10.0.0.5", router: "10.0.0.1",
+    static_config = [ip: "10.0.0.5", router: "10.0.0.1",
              mask: "16", subnet: "255.255.0.0", mode: "static",
-             dns1: "4.4.4.4", dns2: "6.6.6.6"}
+             dns1: "4.4.4.4", dns2: "6.6.6.6"]
     Mocks.IP.init interface
     Mocks.UDHCPC.init interface
     Mocks.UDHCPC.setup interface, dhcp_config
@@ -97,18 +97,16 @@ defmodule Nerves.Networking.Test do
   defp test_module_settings_match(interface, config) do
     # test to make sure network stack has proper settings
     net = Networking.settings(interface)
-    assert net.ip == config.ip
-    assert net.mask == config.mask
-    assert net.router == config.router
-    assert net[:lease] == config[:lease]
-    assert net.mask == config.mask
+    Enum.map [:ip, :mask, :router, :lease], fn(key) ->
+        assert net[key] == config[key]
+    end
  end
 
  def test_ip_mock_matches(interface, config) do
     # test to see if the IP interface actually got configured
     ip_mock = Mocks.IP.settings(interface)
-    assert ip_mock.ip == config.ip
-    assert ip_mock.mask == config.mask
-    assert ip_mock.router == config.router
+    Enum.map [:ip, :mask, :router], fn(key) ->
+        assert ip_mock[key] == config[key]
+    end
   end
 end

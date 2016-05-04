@@ -6,16 +6,14 @@ defmodule Nerves.Networking do
   ## Basic Usage
 
   ```elixir
-  alias Nerves.Networking
-  Networking.setup :eth0, state: auto
+  Nerves.Networking.setup :eth0, state: "auto"
   ```
   Sets up (configures) an adapter with the associated settings. The above
   will try to acquire a ipv4 address via DHCP, reverting to AIPA/ipv4ll
   addressing configuration if that fails, while retrying DHCP occasionally.
 
   ```elixir
-  Networking.setup :eth0, mode: static, address: "192.168.5.8",
-        router: "192.168.5.1", mask: "255.255.255.0"
+  Nerves.Networking.setup :eth0, mode: "static", address: "192.168.5.8",  router: "192.168.5.1", mask: "255.255.255.0"
   ```
   Forces static configuration.
 
@@ -42,19 +40,6 @@ defmodule Nerves.Networking do
   * The `:hostname` option may be used to specify the hostname to pass during
   a DHCP request.
 
-  ### Static config at compile time
-
-  The `:ip` option may be used to specify a static ip address.
-
-  The `:subnet` option is used to specify the subnet for the interface.
-  Example: `255.255.0.0`
-
-  The `:mask` option is used to specify the subnet mask. Example: 16
-
-  The `:router` option used to specify the ip address of the router IP address.
-
-  The `:dns` option is used to specify the ip address of the DNS server.
-  Example: `["8.8.8.8", "4.4.4.4"]`
 
   """
 
@@ -87,13 +72,28 @@ defmodule Nerves.Networking do
   end
 
   @doc """
-  Configure a network interface.
+  Configure a network interface:error
 
   The network interface must first be setup using `setup/2`.
 
   Settings is a `Keyword.t`, as follows...
 
   - `:mode` - either `"static"` (static configuration) or `"auto"`  (dhcp with fallback to ipv4ll).  Defaults to auto, but setting `:ip` or `:subnet` implies static configuration.
+
+  ### Static config at compile time
+
+  The `:ip` option may be used to specify a static ip address. Example: `"192.168.1.205"`
+
+  The `:subnet` option is used to specify the subnet for the interface.
+  Example: `"255.255.0.0"`
+
+  The `:mask` option is used to specify the subnet mask. Example: "16"
+
+  The `:router` option used to specify the ip address of the router.  Example: `"192.168.1.1"`
+
+  The `:dns` option is used to specify the ip addresses of the DNS server.
+  Example: `["8.8.8.8", "4.4.4.4"]`
+
   """
   @spec configure(interface, settings) :: Dict.t
   def configure(interface, settings \\ []) do

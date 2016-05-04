@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.7.0 (2016-05-03)
+
+* added configure/2 (I'm embarassed it wasn't there before)
+* additional tests for reconfiguration
+* documentation cleanup
+
 ## v0.6.0 (2016-03-15)
 
 * renamed module nerves_networking
