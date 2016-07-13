@@ -118,9 +118,9 @@ defmodule Nerves.Networking.Subsystem do
   # responses to select the last (most relelvant) response, and convert to Dict
   # form
   defp parse_udhcpc_response(response) do
-    case (Regex.scan ~r/\[.*\]/sr, response) do
+    case (Regex.scan ~r/\[.*\]/sU, response) do
       [_, [last_response]] ->
-        Regex.scan(~r/(\w+='.+')\n/r, last_response)
+        Regex.scan(~r/(\w+='.+')\n/U, last_response)
         |> Enum.map(&cleanup_kv/1)
       _ ->
         Logger.error "#{__MODULE__} udhcpc invalid response: #{response}" 
