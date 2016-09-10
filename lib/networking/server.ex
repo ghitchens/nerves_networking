@@ -78,7 +78,7 @@ defmodule Nerves.Networking.Server do
     update_and_announce state, dhcp_retries: retry
   end
 
-  # retry after 10 seconds for the first 10 retries, then 1 min
+  # retry after 15 seconds for the first 10 retries, then 1 min
   defp dhcp_retry_interval(tries) when tries >= 10, do: 60000
   defp dhcp_retry_interval(_tries), do: 15000
 
