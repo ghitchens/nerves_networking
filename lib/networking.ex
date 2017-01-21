@@ -70,7 +70,7 @@ defmodule Nerves.Networking do
   def start(_type, _args) do
     Logger.debug "#{__MODULE__} Starting"
     Networking.Subsystem.initialize
-    {:ok, self}  # need supervisor
+    {:ok, self()}  # need supervisor
   end
 
   @doc """

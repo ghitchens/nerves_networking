@@ -37,7 +37,7 @@ defmodule Nerves.Networking.Subsystem do
   @spec initialize() :: :ok | {:error, reason}
   def initialize do
     Logger.debug "initializing Networking.Subsystem"
-    ensure_udhcpc_setup!
+    ensure_udhcpc_setup!()
     :ok
   end
 
@@ -168,7 +168,7 @@ defmodule Nerves.Networking.Subsystem do
   defp unlogged_os_cmd(cmd) do
     cmd
     |> :erlang.binary_to_list
-    |> os_module.cmd
+    |> os_module().cmd
     |> :erlang.list_to_binary
   end
 
@@ -178,7 +178,7 @@ defmodule Nerves.Networking.Subsystem do
   end
 
   defp hostname(nil) do
-    n = node
+    n = node()
       |> to_string
       |> String.split("@")
       |> Enum.at(1)
