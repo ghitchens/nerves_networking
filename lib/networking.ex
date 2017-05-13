@@ -63,9 +63,9 @@ defmodule Nerves.Networking do
 
   alias Nerves.Networking
 
-  @type interface :: Atom
+  @type interface :: Networking.Subsystem.interface
   @type settings :: Dict.t
-  @type reason :: any
+  @type reason :: Networking.Subsystem.interface
 
   def start(_type, _args) do
     Logger.debug "#{__MODULE__} Starting"

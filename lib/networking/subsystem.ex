@@ -18,7 +18,7 @@ defmodule Nerves.Networking.Subsystem do
 
   @type reason :: any
   @type ip_address :: String.t
-  @type interface :: String.t
+  @type interface :: String.t | atom
 
   @udhcpc_script_path "/tmp/udhcpc.sh"
   @resolv_conf_path (case Mix.env do
