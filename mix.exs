@@ -8,10 +8,10 @@ defmodule Nerves.Networking.Mixfile do
     app: :nerves_networking,
     version: @version,
     elixir: "~> 1.0",
-    deps: deps,
+    deps: deps(),
     description: "Nerves Networking Module",
     # Hex
-    package: package,
+    package: package(),
     # ExDoc
     name: "Nerves.Networking",
     docs: [source_ref: "v#{@version}",
